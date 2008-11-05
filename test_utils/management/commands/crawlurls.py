@@ -12,20 +12,7 @@ from django.test.utils import setup_test_environment, teardown_test_environment
 from BeautifulSoup import BeautifulSoup
 import re, cgi, urlparse
 from optparse import make_option
-
-
-class Url():
-    
-    def __init__(self, url, from_url, **kwargs):
-        self.from_url = from_url
-        self.url = url
-        
-    def __unicode__(self):
-        return "URL:%s (from %s)" % (self.url, self.from_url)
-    
-    def __str__(self):
-        return "URL:%s (from %s)" % (self.url, self.from_url)
-        
+from django.test.utils import setup_test_environment
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -52,9 +39,6 @@ class Command(BaseCommand):
             try:
                 urlconf = __import__(settings_mod.ROOT_URLCONF, {}, {}, [''])
             except Exception, e:
-                if options.get('traceback', None):
-                    import traceback
-                    traceback.print_exc()
                 print ("Error occurred while trying to load %s: %s" % (settings_mod.ROOT_URLCONF, str(e)))
                 continue
             view_functions = extract_views_from_urlpatterns(urlconf.urlpatterns)
@@ -65,64 +49,64 @@ class Command(BaseCommand):
                 #func_name = hasattr(func, '__name__') and func.__name__ or repr(func)
                 #print func_name
         
-        """ Now we have all of our URLs to test """
+        #Now we have all of our URLs to test
+        crawled_urls = run('/')
+        import pdb; pdb.set_trace()
+        output_nonmatching(conf_urls, crawled_urls.keys())
         
+def dumb_get_url(c, url, request_dic={}):
+    "Takes a url, and returns it with a list of links"
+    parsed = urlparse.urlparse(url)
+    returned_urls = []
+    print "Getting %s (%s)" % (url, request_dic)
+    resp = c.get(url, request_dic)
+    soup = BeautifulSoup(resp.content)
+    hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
+    for a in hrefs:
+        parsed_href = urlparse.urlparse(a)
+        if parsed_href.path.startswith('/') and not parsed_href.scheme:
+            returned_urls.append(a)
+        elif not parsed_href.scheme:
+            #Relative path = previous path + new path
+            returned_urls.append(parsed.path + a)
+    return (url, resp, returned_urls)
         
-        def crawl_url(url_obj, already_crawled={}, test_logging_in=False):
-            from_url, url = url_obj.from_url, url_obj.url
-            if url not in already_crawled.keys():
-                
-                #Fetch URLs
-                already_crawled[url] = url_obj
-                print "Trying: %s (from %s)" % (url, from_url)
-                parsed = urlparse.urlparse(url)
-                dic = dict(cgi.parse_qsl(parsed.query))
-                if dic: #cut off the get params
-                    url = parsed.path
-                resp = c.get(url, dic)
-                if not resp.status_code in (200,302):
-                    print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
-                    url_obj.status = resp.status_code
-                    
-                #Find more and recursively grab 'em
-                for a in BeautifulSoup(resp.content).findAll('a'):
-                    try:
-                        parsed_href = urlparse.urlparse(a['href'])
-                        if parsed_href.path.startswith('/') and not parsed_href.scheme:
-                            crawl_url(Url(parsed_href.path, url), already_crawled)
-                        elif not parsed_href.scheme:
-                            crawl_url(Url(parsed.path + parsed_href.path), url, already_crawled)
-                    except Exception, e:
-                        #print "PARSE FAIL: A:%s Error:%s (from %s)" % (a, e, from_url)
-                        pass
-            if test_logging_in:
-                USERNAME = 'test'
-                PASSWORD = 'test'
-                c.login(username=USERNAME, password=PASSWORD)
-                print "AGAIN, LOGGED IN THIS TIME!"
-                u = Url('/admin/', 'TRY_LOGGEDIN')
-                crawl_url(u, already_crawled, False)
-                
-            return already_crawled
+def run(initial_path):
+    setup_test_environment()
+    c = Client(REMOTE_ADDR='127.0.0.1')
+    not_crawled = [initial_path]
+    already_crawled = {}
+    
+    while len(not_crawled) > 0:
+        #Take top off not_crawled and evaluate it
+        orig_url = url_target = not_crawled.pop(0)
         
+        parsed = urlparse.urlparse(url_target)
+        request_dic = dict(cgi.parse_qsl(parsed.query))
+        if request_dic: #cut off the get params
+            url_target = parsed.path
+        #url now contains the path, request_dic contains get params
         
-        def output_nonmatching(conf_urls, loved_urls):
-            for pattern in conf_urls:
-                pattern = pattern.replace('^', '').replace('$', '').replace('//', '/')
-                curr = re.compile(pattern)
-                matched = False
-                for url in loved_urls:
-                    if curr.search(url):
-                        matched = True
-                if not matched:
-                    pass
-                    #print "NOT MATCHED: %s" % pattern
-        
-        #USERNAME = 'etest'
-        #PASSWORD = 'test'
-        c = Client(REMOTE_ADDR='127.0.0.1')
-        #c.login(username=USERNAME, password=PASSWORD)
-        
-        u = Url('/', 'CLI')
-        loved_urls = crawl_url(u, {}, True)
-        output_nonmatching(conf_urls, loved_urls)
+        url, resp, returned_urls = dumb_get_url(c, url_target, request_dic)
+        already_crawled[orig_url] = (resp.context, resp.template)
+        #Get the info on the page
+        if not resp.status_code in (200,302, 301):
+            print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
+        #Find its links
+        for base_url in returned_urls:
+            if base_url not in not_crawled and not already_crawled.has_key(base_url):
+                not_crawled.append(base_url)
+    
+    return already_crawled
+
+def output_nonmatching(conf_urls, loved_urls):
+    "Run after the spider is done to show what URLConf entries got hit"
+    for pattern in conf_urls:
+        pattern = pattern.replace('^', '').replace('$', '').replace('//', '/')
+        curr = re.compile(pattern)
+        matched = False
+        for url in loved_urls:
+            if curr.search(url):
+                matched = True
+        if not matched:
+            print "NOT MATCHED: %s" % pattern
