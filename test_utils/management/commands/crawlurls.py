@@ -45,6 +45,7 @@ class Command(BaseCommand):
         CHECK_HTML = options.get('html', False)
         CHECK_TIME = options.get('time', False)
         STORE_RESPONSE = options.get('response', False)
+        VERBOSITY = int(options.get('verbosity', 1))
         #EACH_URL = options.get('each', 100000)
         
         if settings.ADMIN_FOR:
@@ -71,7 +72,8 @@ class Command(BaseCommand):
             "Takes a url, and returns it with a list of links"
             parsed = urlparse.urlparse(url)
             returned_urls = []
-            print "Getting %s (%s) from (%s)" % (url, request_dic, from_url)
+            if VERBOSITY > 1:
+                print "Getting %s (%s) from (%s)" % (url, request_dic, from_url)
             time_to_run = ''
             if CHECK_TIME:
                 resp, time_to_run = time_function(lambda: c.get(url, request_dic))
