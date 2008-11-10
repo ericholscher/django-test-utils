@@ -44,7 +44,7 @@ class Command(BaseCommand):
         CHECK_HTML = options.get('html', False)
         CHECK_TIME = options.get('time', False)
         STORE_RESPONSE = options.get('response', False)
-        VERBOSITY = int(options.get('verbosity', 1))
+        VERBOSITY = int(options.get('verbosity', 2))
         #EACH_URL = options.get('each', 100000)
         
         if settings.ADMIN_FOR:
@@ -73,25 +73,29 @@ class Command(BaseCommand):
             returned_urls = []
             if VERBOSITY > 1:
                 print "Getting %s (%s) from (%s)" % (url, request_dic, from_url)
-            time_to_run = ''
-            if CHECK_TIME:
-                resp, time_to_run = time_function(lambda: c.get(url, request_dic))
-            else:
-                resp = c.get(url, request_dic)
-                
-            soup = BeautifulSoup(resp.content)
-            if CHECK_HTML:
-                if soup.find(text='&lt;') or soup.find(text='&gt;'):
-                    print "%s has dirty html" % url
-            hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
-            for a in hrefs:
-                parsed_href = urlparse.urlparse(a)
-                if parsed_href.path.startswith('/') and not parsed_href.scheme:
-                    returned_urls.append(a)
-                elif not parsed_href.scheme:
-                    #Relative path = previous path + new path
-                    returned_urls.append(parsed.path + a)
-            return (url, resp, time_to_run, returned_urls)
+            resp = time_to_run = ''
+            
+            try:
+                if CHECK_TIME:
+                    resp, time_to_run = time_function(lambda: c.get(url, request_dic))
+                else:
+                    resp = c.get(url, request_dic)
+                soup = BeautifulSoup(resp.content)
+                if CHECK_HTML:
+                    if soup.find(text='&lt;') or soup.find(text='&gt;'):
+                        print "%s has dirty html" % url
+                hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
+                for a in hrefs:
+                    parsed_href = urlparse.urlparse(a)
+                    if parsed_href.path.startswith('/') and not parsed_href.scheme:
+                        returned_urls.append(a)
+                    elif not parsed_href.scheme:
+                        #Relative path = previous path + new path
+                        returned_urls.append(parsed.path + a)
+                return (url, resp, time_to_run, returned_urls)
+            except Exception, e:
+                print "Exception: %s (%s)" % (e, url)
+                return (url, '', '', [])
                 
         def run(initial_path):
             setup_test_environment()
@@ -115,11 +119,12 @@ class Command(BaseCommand):
                 else:
                     already_crawled[orig_url] = time_to_run
                 #Get the info on the page
-                if not resp.status_code in (200,302, 301):
-                    print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
-                    if USE_PDB:
-                        import pdb
-                        pdb.set_trace()
+                if hasattr(resp, 'status_code'):
+                    if not resp.status_code in (200,302, 301):
+                        print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
+                        if USE_PDB:
+                            import pdb
+                            pdb.set_trace()
                 #Find its links
                 for base_url in returned_urls:
                     if base_url not in [base for orig,base in not_crawled] and not already_crawled.has_key(base_url):
@@ -144,13 +149,19 @@ class Command(BaseCommand):
             #Not implemented.
             return crawled_urls.keys()
         
+        def longest_time(crawled_urls):
+            "Print the longest time it took for pages to load"
+            alist = sorted(crawled_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+            for url, time in alist[:10]:
+                print "%s took %f" % (url, time)
+        
         def time_function(func, prnt=True):
             "Run the function passed in, printing the time elapsed"
             import time
             cur = time.time()
             ret = func()
             time_to_run = (time.time() - cur)
-            if prnt:
+            if prnt and VERBOSITY > 1:
                 print "Time Elapsed: %s " % time_to_run
             return (ret, time_to_run)
             
@@ -159,7 +170,9 @@ class Command(BaseCommand):
         #Now we have all of our URLs to test
         crawled_urls = run('/')
         output_nonmatching(conf_urls, crawled_urls.keys())
+        if CHECK_TIME:
+            longest_time(crawled_urls)
         if MAKE_FIXTURES:
-            print make_fixture(crawled_urls)
+            make_fixture(crawled_urls)
             
         
