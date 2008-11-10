@@ -25,6 +25,8 @@ class Command(BaseCommand):
             help='Pass -s to check for html fragments in your pages.'),
         make_option('-t', '--time', action='store_true', dest='time', default=False,
             help='Pass -t to time your requests.'),
+        make_option('-r', '--response', action='store_true', dest='response', default=False,
+            help='Pass -r to store the response objects.'),
         #TODO
         make_option('-e', '--each', action='store', dest='each',
             type='int',
@@ -42,6 +44,7 @@ class Command(BaseCommand):
         MAKE_FIXTURES = options.get('fixtures', False)
         CHECK_HTML = options.get('html', False)
         CHECK_TIME = options.get('time', False)
+        STORE_RESPONSE = options.get('response', False)
         #EACH_URL = options.get('each', 100000)
         
         if settings.ADMIN_FOR:
@@ -106,7 +109,10 @@ class Command(BaseCommand):
                 #url now contains the path, request_dic contains get params
                 
                 url, resp, time_to_run, returned_urls = dumb_get_url(c, from_url, url_target, request_dic)
-                already_crawled[orig_url] = (resp, time_to_run)
+                if STORE_RESPONSE:
+                    already_crawled[orig_url] = (resp, time_to_run)
+                else:
+                    already_crawled[orig_url] = time_to_run
                 #Get the info on the page
                 if not resp.status_code in (200,302, 301):
                     print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
