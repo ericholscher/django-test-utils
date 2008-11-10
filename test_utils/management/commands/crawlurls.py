@@ -32,7 +32,7 @@ class Command(BaseCommand):
             help='TODO: Pass -e NUM to specify how many times each URLConf entry should be hit.'),
     )
 
-    args = '[server:port]'
+    #args = 'app'
     help = "Displays all of the url matching routes for the project."
     
     requires_model_validation = True
