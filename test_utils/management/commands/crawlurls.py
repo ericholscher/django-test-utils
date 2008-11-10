@@ -13,7 +13,6 @@ from BeautifulSoup import BeautifulSoup
 import re, cgi, urlparse
 from optparse import make_option
 from django.test.utils import setup_test_environment
-import time
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -82,7 +81,7 @@ class Command(BaseCommand):
                 
             soup = BeautifulSoup(resp.content)
             if CHECK_HTML:
-                if soup.find('&lt;') or soup.find('&gt;'):
+                if soup.find(text='&lt;') or soup.find(text='&gt;'):
                     print "%s has dirty html" % url
             hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
             for a in hrefs:
