@@ -25,6 +25,10 @@ class Command(BaseCommand):
             help='Pass -s to check for html fragments in your pages.'),
         make_option('-t', '--time', action='store_true', dest='time', default=False,
             help='Pass -t to time your requests.'),
+        #TODO
+        make_option('-e', '--each', action='store', dest='each',
+            type='int',
+            help='TODO: Pass -e NUM to specify how many times each URLConf entry should be hit.'),
     )
 
     args = '[server:port]'
@@ -38,6 +42,7 @@ class Command(BaseCommand):
         MAKE_FIXTURES = options.get('fixtures', False)
         CHECK_HTML = options.get('html', False)
         CHECK_TIME = options.get('time', False)
+        #EACH_URL = options.get('each', 100000)
         
         if settings.ADMIN_FOR:
             settings_modules = [__import__(m, {}, {}, ['']) for m in settings.ADMIN_FOR]
@@ -64,14 +69,11 @@ class Command(BaseCommand):
             parsed = urlparse.urlparse(url)
             returned_urls = []
             print "Getting %s (%s) from (%s)" % (url, request_dic, from_url)
-            
+            time_to_run = ''
             if CHECK_TIME:
-                curtime = time.time()
-                
-            resp = c.get(url, request_dic)
-            
-            if CHECK_TIME:
-                print "Time Elapsed: %s" % (time.time() - curtime)
+                resp, time_to_run = time_function(lambda: c.get(url, request_dic))
+            else:
+                resp = c.get(url, request_dic)
                 
             soup = BeautifulSoup(resp.content)
             if CHECK_HTML:
@@ -85,7 +87,7 @@ class Command(BaseCommand):
                 elif not parsed_href.scheme:
                     #Relative path = previous path + new path
                     returned_urls.append(parsed.path + a)
-            return (url, resp, returned_urls)
+            return (url, resp, time_to_run, returned_urls)
                 
         def run(initial_path):
             setup_test_environment()
@@ -103,8 +105,8 @@ class Command(BaseCommand):
                     url_target = parsed.path
                 #url now contains the path, request_dic contains get params
                 
-                url, resp, returned_urls = dumb_get_url(c, from_url, url_target, request_dic)
-                already_crawled[orig_url] = resp
+                url, resp, time_to_run, returned_urls = dumb_get_url(c, from_url, url_target, request_dic)
+                already_crawled[orig_url] = (resp, time_to_run)
                 #Get the info on the page
                 if not resp.status_code in (200,302, 301):
                     print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
@@ -113,7 +115,7 @@ class Command(BaseCommand):
                         pdb.set_trace()
                 #Find its links
                 for base_url in returned_urls:
-                    if base_url not in not_crawled and not already_crawled.has_key(base_url):
+                    if base_url not in [base for orig,base in not_crawled] and not already_crawled.has_key(base_url):
                         not_crawled.append((orig_url, base_url))
             
             return already_crawled
@@ -134,6 +136,17 @@ class Command(BaseCommand):
             "Serialize object to keep later"
             #Not implemented.
             return crawled_urls.keys()
+        
+        def time_function(func, prnt=True):
+            "Run the function passed in, printing the time elapsed"
+            import time
+            cur = time.time()
+            ret = func()
+            time_to_run = (time.time() - cur)
+            if prnt:
+                print "Time Elapsed: %s " % time_to_run
+            return (ret, time_to_run)
+            
         
         
         #Now we have all of our URLs to test
