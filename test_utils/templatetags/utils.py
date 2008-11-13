@@ -1,6 +1,6 @@
 from django import template 
 
-register = template.loader()
+register = template.Library()
 
 def parse_ttag(token):
     bits = token.split_contents()
