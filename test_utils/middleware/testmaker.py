@@ -15,12 +15,10 @@ if not debug:
    #return
    
 DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
-'extends' , 'filter' , 'firstof' , 'for' , 'if' ,
+'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
 'ifchanged' , 'ifequal' , 'ifnotequal' , 'include' , 'load' , 'now' ,
 'regroup' , 'spaceless' , 'ssi' , 'templatetag' , 'url' , 'widthratio' ,
 'with' ]   
-
-
 
 class TestMakerMiddleware(object):
    def process_request(self, request):
@@ -36,7 +34,11 @@ class TestMakerMiddleware(object):
             if r.context and r.status_code != 404:
                con = get_user_context(r.context) 
                output_user_context(con)
-               output_ttag_tests(con, r.template[0])
+               try:
+                  output_ttag_tests(con, r.template[0])
+               except Exception, e:
+                  #Another hack
+                  pass
             
 def log_request(request):
    log.info('\n\tdef %s(self): ' % 'test_path')
