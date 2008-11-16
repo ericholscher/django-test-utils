@@ -61,6 +61,7 @@ class Command(AppCommand):
 
         log.info('from django.test import TestCase')
         log.info('from django.test import Client')
+        log.info('from django import template')
         log.info('c = Client()')
         log.info('class Testmaker(TestCase):')
         if create_fixtures:
