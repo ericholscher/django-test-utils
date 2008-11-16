@@ -24,7 +24,7 @@ class TestMakerMiddleware(object):
             getdict['test_client_true'] = 'yes' #avoid recursion
             r = c.get(request.path, getdict)
             log_status(request.path, r)
-            if r.context:
+            if r.context and r.status_code != 404:
                con = get_user_context(r.context) 
                output_user_context(con)
             
@@ -32,9 +32,9 @@ def log_request(request):
    log.info('\n\tdef %s(self): ' % 'test_path')
    method = request.method.lower()
    request_str = "'%s', {" % request.path
-   for dict in request.REQUEST.dicts:
-      for arg in dict:
-         request_str += "'%s': '%s', " % arg, request.REQUEST[arg]
+   for dikt in request.REQUEST.dicts:
+      for arg in dikt:
+         request_str += "'%s': '%s'" % (arg, request.REQUEST[arg])
    request_str += "}"
    log.info("\t\tr = c.%s(%s)" % (method, request_str))
 
@@ -57,7 +57,7 @@ def output_user_context(context):
       try: 
          if not re.search("0x\w+", force_unicode(context[var])): #Avoid memory addy's which will change.
             log.info(u'\t\tself.assertEqual(unicode(r.context[-1]["%s"]), u"%s")' % (var, unicode(context[var])))
-      except Exception, e:
-         #FIXME: This might blow up on odd encoding or 404s. 
+      except UnicodeDecodeError, e:
+         #FIXME: This might blow up on odd encoding 
          pass
    
