@@ -2,6 +2,7 @@ from django.conf import settings
 from django.test import Client
 from django.test.utils import setup_test_environment
 import logging, re
+from django.utils.encoding import force_unicode
 
 log = logging.getLogger('testmaker')
 print "Loaded Testmaker Middleware"
@@ -41,6 +42,7 @@ def log_status(path, request):
    log.info("\t\tself.assertEqual(r.status_code, %s)" % request.status_code)
 
 def get_user_context(context_list):
+   #Ugly Hack. Needs to be a better way
    if isinstance(context_list, list):
       context_list = context_list[-1] #Last context rendered
       ret = context_list.dicts[-1]
@@ -51,7 +53,11 @@ def get_user_context(context_list):
       return context_list
    
 def output_user_context(context):
-    for var in context:
-        if not re.search("0x\w+", unicode(context[var])): #Avoid memory addy's which will change.
-            log.info(u"\t\tself.assertEqual(unicode(r.context[-1]['%s']), u"""%s""")" % (var, unicode(context[var])))
+   for var in context:
+      try: 
+         if not re.search("0x\w+", force_unicode(context[var])): #Avoid memory addy's which will change.
+            log.info(u'\t\tself.assertEqual(unicode(r.context[-1]["%s"]), u"%s")' % (var, unicode(context[var])))
+      except Exception, e:
+         #FIXME: This might blow up on odd encoding or 404s. 
+         pass
    
