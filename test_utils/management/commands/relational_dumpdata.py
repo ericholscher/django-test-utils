@@ -12,7 +12,7 @@ def _relational_dumpdata(app, collected):
     #Got models, now get their relationships.
     #Thanks to http://www.djangosnippets.org/snippets/918/
     related = []
-    collected.add(s for s in set([(x.__class__, x.pk) for x in objects]))  #Just used to track already gotten models
+    collected.add([(x.__class__, x.pk) for x in objects])  #Just used to track already gotten models
     for obj in objects:
         for f in obj._meta.fields :
             if isinstance(f, ForeignKey):
@@ -59,9 +59,6 @@ class Command(BaseCommand):
 
         # Check that the serialization format exists; this is a shortcut to
         # avoid collating all the objects and _then_ failing.
-        if format not in serializers.get_public_serializer_formats():
-            raise CommandError("Unknown serialization format: %s" % format)
-
         try:
             serializers.get_serializer(format)
         except KeyError:
@@ -69,7 +66,7 @@ class Command(BaseCommand):
 
         objects = []
         collected = set()
-        for app in app_list:
+        for app in app_list: #Yey for ghetto recusion
             objects, collected = _relational_dumpdata(app, collected)
         #****End New stuff
         try:
