@@ -4,6 +4,8 @@ from django.test.utils import setup_test_environment
 import logging, re, os
 from django.utils.encoding import force_unicode
 from django import template
+from django.template.defaultfilters import slugify
+import time
 
 log = logging.getLogger('testmaker')
 print "Loaded Testmaker Middleware"
@@ -13,12 +15,12 @@ debug = getattr(settings, 'DEBUG', False)
 if not debug:
    print "THIS CODE IS NOT MEANT FOR USE IN PRODUCTION"
    #return
-   
+
 DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
 'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
 'ifchanged' , 'ifequal' , 'ifnotequal' , 'include' , 'load' , 'now' ,
 'regroup' , 'spaceless' , 'ssi' , 'templatetag' , 'url' , 'widthratio' ,
-'with' ]   
+'with' ]
 
 class TestMakerMiddleware(object):
    def process_request(self, request):
@@ -32,16 +34,16 @@ class TestMakerMiddleware(object):
             r = c.get(request.path, getdict)
             log_status(request.path, r)
             if r.context and r.status_code != 404:
-               con = get_user_context(r.context) 
+               con = get_user_context(r.context)
                output_user_context(con)
                try:
                   output_ttag_tests(con, r.template[0])
                except Exception, e:
                   #Another hack
                   pass
-            
+
 def log_request(request):
-   log.info('\n\tdef %s(self): ' % 'test_path')
+   log.info('\n\tdef test_%s-%s(self): ' % (slugify(request.path), slugify(time.time())))
    method = request.method.lower()
    request_str = "'%s', {" % request.path
    for dikt in request.REQUEST.dicts:
@@ -63,15 +65,16 @@ def get_user_context(context_list):
       return ret
    else:
       return context_list
-   
+
 def output_user_context(context):
    for var in context:
-      try: 
+      try:
          if not re.search("0x\w+", force_unicode(context[var])): #Avoid memory addy's which will change.
             log.info(u'\t\tself.assertEqual(unicode(r.context[-1]["%s"]), u"%s")' % (var, unicode(context[var])))
       except UnicodeDecodeError, e:
-         #FIXME: This might blow up on odd encoding 
+         #FIXME: This might blow up on odd encoding
          pass
+
 
 def output_ttag_tests(context, templ):
    tag_re = re.compile('({% (.*?) %})')
@@ -113,4 +116,4 @@ def output_ttag(template_str, output_str, context):
    log.info('\t\ttmpl = template.Template(%s)' % template_str)
    log.info('\t\tcontext = template.Context(%s)' % context)
    log.info('\t\tself.assertEqual(tmpl.render(context), "%s")' % output_str)
-      
+
