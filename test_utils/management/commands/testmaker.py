@@ -32,6 +32,8 @@ class Command(AppCommand):
 
         app_name = app.__name__.split('.')[-2]
         base_dir = path.dirname(app.__file__)
+        #Assume we're writing new tests until proven otherwise
+        new_tests = True
 
         #Figure out where to store data
         if create_fixtures:
@@ -44,6 +46,8 @@ class Command(AppCommand):
         test_file = path.join(tests_dir, '%s-testmaker.py' % (app_name))
         if not path.exists(tests_dir):
             os.mkdir(tests_dir)
+        if path.exists(test_file):
+            new_tests = False
 
         if verbosity > 0:
             print "Handling app '%s'" % app_name
@@ -60,15 +64,19 @@ class Command(AppCommand):
         handler.setFormatter(logging.Formatter('%(message)s'))
         log.addHandler(handler)
 
-        log.info('from django.test import TestCase')
-        log.info('from django.test import Client')
-        log.info('from django import template')
-        log.info('c = Client()')
-        log.info('class Testmaker(TestCase):')
-        if create_fixtures:
-            log.info('\tfixtures = ["%s"]' % fixture_file)
+
+        if new_tests:
+            log.info('from django.test import TestCase')
+            log.info('from django.test import Client')
+            log.info('from django import template')
+            log.info('c = Client()')
+            log.info('class Testmaker(TestCase):')
+            if create_fixtures:
+                log.info('\tfixtures = ["%s"]' % fixture_file)
+            else:
+                log.info('\t#fixtures = ["%s"]' % app_name)
         else:
-            log.info('\t#fixtures = ["%s"]' % app_name)
+            print "Appending to current log file"
 
         if verbosity > 0:
             print "Inserting TestMaker logging server..."
@@ -84,8 +92,8 @@ class Command(AppCommand):
 def make_fixtures(fixture_file, format, app):
     print "Creating fixture at " + fixture_file
     from test_utils.management.commands.relational_dumpdata import _relational_dumpdata
-    objects, collected = _relational_dumpdata(app, [])
-    serial_file = open(fixture_file, 'w')
+    objects, collected = _relational_dumpdata(app, set())
+    serial_file = open(fixture_file, 'a')
     try:
         serializers.serialize(format, objects, stream=serial_file)
     except Exception, e:

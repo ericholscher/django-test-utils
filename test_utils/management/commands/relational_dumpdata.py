@@ -12,7 +12,7 @@ def _relational_dumpdata(app, collected):
     #Got models, now get their relationships.
     #Thanks to http://www.djangosnippets.org/snippets/918/
     related = []
-    collected = set([(x.__class__, x.pk) for x in objects])  #Just used to track already gotten models
+    collected.add(s for s in set([(x.__class__, x.pk) for x in objects]))  #Just used to track already gotten models
     for obj in objects:
         for f in obj._meta.fields :
             if isinstance(f, ForeignKey):
@@ -68,7 +68,7 @@ class Command(BaseCommand):
             raise CommandError("Unknown serialization format: %s" % format)
 
         objects = []
-        collected = []
+        collected = set()
         for app in app_list:
             objects, collected = _relational_dumpdata(app, collected)
         #****End New stuff
