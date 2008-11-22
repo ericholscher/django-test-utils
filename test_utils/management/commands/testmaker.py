@@ -7,6 +7,7 @@ from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core import serializers
 from django.test.signals import template_rendered
 from django.conf import settings
+from django.core.management import call_command
 
 
 class Command(AppCommand):
@@ -15,44 +16,44 @@ class Command(AppCommand):
             help='Pass -f to create a fixture for the data.'),
         make_option('--format', default='json', dest='format',
             help='Specifies the output serialization format for fixtures.'),
-        make_option('--addrport', action='store', dest='addrport', 
+        make_option('--addrport', action='store', dest='addrport',
             type='string', help='port number or ipaddr:port to run the server on'),
     )
 
     help = 'Runs the test server with the testmaker output enabled for a specific app'
     args = '[app to test]'
-    
+
     def handle_app(self, app, **options):
 
         verbosity = int(options.get('verbosity', 1))
         create_fixtures = options.get('fixture', False)
         format = options.get('format', 'json')
         addrport = options.get('addrport', '')
-        
+
         app_name = app.__name__.split('.')[-2]
         base_dir = path.dirname(app.__file__)
-        
+
         #Figure out where to store data
         if create_fixtures:
             fixtures_dir = path.join(base_dir, 'fixtures')
             fixture_file = path.join(fixtures_dir, '%s-testmaker.%s' % (app_name, format))
-            if not path.exists(fixture_dir):
-                os.mkdir(fixture_dir)
-                
+            if not path.exists(fixtures_dir):
+                os.mkdir(fixtures_dir)
+
         tests_dir = path.join(base_dir, 'tests')
         test_file = path.join(tests_dir, '%s-testmaker.py' % (app_name))
         if not path.exists(tests_dir):
             os.mkdir(tests_dir)
-        
+
         if verbosity > 0:
             print "Handling app '%s'" % app_name
             print "Logging tests to %s" % test_file
             if create_fixtures:
-                print "Logging fixtures to %s" % fixturefile
-        
+                print "Logging fixtures to %s" % fixture_file
+
         logging.basicConfig(level=logging.CRITICAL,
                             filename="/dev/null")
-        
+
         log = logging.getLogger('testmaker')
         log.setLevel(logging.INFO)
         handler = logging.FileHandler(test_file, 'w')
@@ -72,15 +73,21 @@ class Command(AppCommand):
         if verbosity > 0:
             print "Inserting TestMaker logging server..."
         settings.MIDDLEWARE_CLASSES += ('test_utils.middleware.testmaker.TestMakerMiddleware',)
-        
-        from django.core.management import call_command
+
         try:
             call_command('runserver', addrport=addrport, use_reloader=False)
         except SystemExit:
             if create_fixtures:
-                make_fixtures(fixture_file, app)
-        
+                make_fixtures(fixture_file, format, app)
 
-def make_fixtures(fixturefile, app):
-    print "Creating fixture at " + fixturefile
-    print "Not implemented"
+
+def make_fixtures(fixture_file, format, app):
+    print "Creating fixture at " + fixture_file
+    from test_utils.management.commands.relational_dumpdata import _relational_dumpdata
+    objects, collected = _relational_dumpdata(app, [])
+    serial_file = open(fixture_file, 'w')
+    try:
+        serializers.serialize(format, objects, stream=serial_file)
+    except Exception, e:
+        print ("Unable to serialize database: %s" % e)
+        sys.exit(0)
