@@ -43,7 +43,7 @@ class TestMakerMiddleware(object):
                   pass
 
 def log_request(request):
-   log.info('\n\tdef test_%s-%s(self): ' % (slugify(request.path), slugify(time.time())))
+   log.info('\n\tdef test_%s_%s(self): ' % (slugify(request.path), slugify(time.time())))
    method = request.method.lower()
    request_str = "'%s', {" % request.path
    for dikt in request.REQUEST.dicts:

@@ -1,1 +1,3 @@
-Welcome to django-test-utils. The blog post annoucning this project has more information about it and is located at http://ericholscher.com/blog/2008/nov/10/announcing-django-crawler-test-utils/
+Welcome to django-test-utils. The blog post annoucning this project has more information about it and is located at http://ericholscher.com/projects/django-test-utils/
+
+Documentation for django-testmaker can be found at http://ericholscher.com/projects/django-testmaker/
