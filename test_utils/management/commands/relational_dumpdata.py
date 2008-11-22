@@ -12,7 +12,7 @@ def _relational_dumpdata(app, collected):
     #Got models, now get their relationships.
     #Thanks to http://www.djangosnippets.org/snippets/918/
     related = []
-    collected.add([(x.__class__, x.pk) for x in objects])  #Just used to track already gotten models
+    collected = collected.union(set([(x.__class__, x.pk) for x in objects]))
     for obj in objects:
         for f in obj._meta.fields :
             if isinstance(f, ForeignKey):

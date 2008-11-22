@@ -27,7 +27,7 @@ class Command(AppCommand):
 
         verbosity = int(options.get('verbosity', 1))
         create_fixtures = options.get('fixture', False)
-        format = options.get('format', 'json')
+        format = options.get('format', 'xml')
         addrport = options.get('addrport', '')
 
         app_name = app.__name__.split('.')[-2]
@@ -38,12 +38,12 @@ class Command(AppCommand):
         #Figure out where to store data
         if create_fixtures:
             fixtures_dir = path.join(base_dir, 'fixtures')
-            fixture_file = path.join(fixtures_dir, '%s-testmaker.%s' % (app_name, format))
+            fixture_file = path.join(fixtures_dir, '%s_testmaker.%s' % (app_name, format))
             if not path.exists(fixtures_dir):
                 os.mkdir(fixtures_dir)
 
         tests_dir = path.join(base_dir, 'tests')
-        test_file = path.join(tests_dir, '%s-testmaker.py' % (app_name))
+        test_file = path.join(tests_dir, '%s_testmaker.py' % (app_name))
         if not path.exists(tests_dir):
             os.mkdir(tests_dir)
         if path.exists(test_file):
@@ -55,12 +55,13 @@ class Command(AppCommand):
             if create_fixtures:
                 print "Logging fixtures to %s" % fixture_file
 
+        #supress other logging
         logging.basicConfig(level=logging.CRITICAL,
                             filename="/dev/null")
 
         log = logging.getLogger('testmaker')
         log.setLevel(logging.INFO)
-        handler = logging.FileHandler(test_file, 'w')
+        handler = logging.FileHandler(test_file, 'a')
         handler.setFormatter(logging.Formatter('%(message)s'))
         log.addHandler(handler)
 
@@ -69,6 +70,7 @@ class Command(AppCommand):
             log.info('from django.test import TestCase')
             log.info('from django.test import Client')
             log.info('from django import template')
+            log.info('from django.db.models import get_model')
             log.info('c = Client()')
             log.info('class Testmaker(TestCase):')
             if create_fixtures:
