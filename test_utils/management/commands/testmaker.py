@@ -71,7 +71,7 @@ class Command(AppCommand):
             log.info('from django.test import Client')
             log.info('from django import template')
             log.info('from django.db.models import get_model')
-            log.info('c = Client()')
+            log.info('c = Client(REMOTE_ADDR="127.0.0.1")')
             log.info('class Testmaker(TestCase):')
             if create_fixtures:
                 log.info('\tfixtures = ["%s"]' % fixture_file)
