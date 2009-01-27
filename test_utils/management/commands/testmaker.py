@@ -67,6 +67,7 @@ class Command(AppCommand):
 
 
         if new_tests:
+            #TODO Use a template for this
             log.info('from django.test import TestCase')
             log.info('from django.test import Client')
             log.info('from django import template')
@@ -89,6 +90,7 @@ class Command(AppCommand):
         except SystemExit:
             if create_fixtures:
                 make_fixtures(fixture_file, format, app)
+            sys.exit(0)
 
 
 def make_fixtures(fixture_file, format, app):
@@ -100,4 +102,3 @@ def make_fixtures(fixture_file, format, app):
         serializers.serialize(format, objects, stream=serial_file)
     except Exception, e:
         print ("Unable to serialize database: %s" % e)
-        sys.exit(0)

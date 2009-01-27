@@ -8,13 +8,15 @@ from django.template.defaultfilters import slugify
 import time
 
 log = logging.getLogger('testmaker')
-print "Loaded Testmaker Middleware"
 
-#Remove at your own peril
+#Remove at your own peril.
+#Thar be sharks in these waters.
 debug = getattr(settings, 'DEBUG', False)
 if not debug:
    print "THIS CODE IS NOT MEANT FOR USE IN PRODUCTION"
    #return
+else:
+    print "Loaded Testmaker Middleware"
 
 DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
 'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
@@ -42,7 +44,7 @@ class TestMakerMiddleware(object):
                   output_ttag_tests(user_context, r.template[0])
                except Exception, e:
                   #Another hack
-                  print "Error! %s" % e
+                  log.error("Error! %s" % e)
 
 ### Testmaker stuff
 
@@ -57,7 +59,9 @@ def log_request(request):
    log.info("\t\tr = c.%s(%s)" % (method, request_str))
 
 def log_status(path, request):
-   log.info("\t\tself.assertEqual(r.status_code, %s)" % request.status_code)
+    log.info("\t\tself.assertEqual(r.status_code, %s)" % request.status_code)
+    if request.status_code in [301, 302]:
+        log.info("\t\tself.assertEqual(r['Location'], %s)" % request['Location'])
 
 def get_user_context(context_list):
    #Ugly Hack. Needs to be a better way

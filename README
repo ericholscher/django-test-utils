@@ -1,3 +1,17 @@
 Welcome to django-test-utils. The blog post annoucning this project has more information about it and is located at http://ericholscher.com/projects/django-test-utils/
 
 Documentation for django-testmaker can be found at http://ericholscher.com/projects/django-testmaker/
+
+
+TODO:
+
+- Make a setting or a pluggable way to include arbitrary code execution on the response
+  - This probably requires a data store.
+  - Need to decide if these plugins can interact
+
+Looks something like:
+test_utils.register(my_func)
+
+for func in registered_funcs:
+   func(request, datastore)
+
