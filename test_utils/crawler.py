@@ -18,7 +18,7 @@ class Crawler(object):
 
         self.c = Client(REMOTE_ADDR='127.0.0.1')
 
-    def _parse_urls(url, resp):
+    def _parse_urls(self, url, resp):
         parsed = urlparse.urlparse(url)
         soup = BeautifulSoup(resp.content)
         returned_urls = []
@@ -42,11 +42,10 @@ class Crawler(object):
         resp = self.c.get(url, request_dict)
         post_request.send(self, url=url, response=resp)
 
-        returned_urls = _parse_urls(url, resp)
+        returned_urls = self._parse_urls(url, resp)
         return (resp, returned_urls)
 
     def run(self):
-        setup_test_environment()
 
         while len(self.not_crawled) > 0:
             #Take top off not_crawled and evaluate it
@@ -58,24 +57,20 @@ class Crawler(object):
             #url_path now contains the path, request_dict contains get params
 
             try:
-                resp, returned_urls = get_url(from_url, url_path, request_dict)
+                resp, returned_urls = self.get_url(from_url, url_path, request_dict)
             except Exception, e:
                 print "Exception: %s (%s)" % (e, to_url)
                 resp = ''
                 returned_urls = []
 
-            #use orig_url here so that pagination and get params work
-            self.already_crawled[orig_url] = True
-
+            self.crawled[to_url] = True
             #Find its links
             for base_url in returned_urls:
-                if base_url not in [to for fro,to in self.not_crawled] and not self.already_crawled.has_key(base_url):
-                    self.not_crawled.append((orig_url, base_url))
+                if base_url not in [to for fro,to in self.not_crawled] and not self.crawled.has_key(base_url):
+                    self.not_crawled.append((to_url, base_url))
 
-        finish_run.send()
-        return already_crawled
-
-
+        finish_run.send(self)
+        return self.crawled
 
 class Plugin(object):
     """

@@ -59,4 +59,3 @@ class Command(BaseCommand):
 
         c = Crawler('/')
         c.run()
-        c.print_reports()
