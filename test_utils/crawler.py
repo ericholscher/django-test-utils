@@ -1,7 +1,7 @@
 from test_utils.signals import post_request, pre_request, finish_run
 from django.test.client import Client
 from BeautifulSoup import BeautifulSoup
-import re, cgi, urlparse
+import re, cgi, urlparse, time
 
 class Crawler(object):
     """
@@ -17,6 +17,10 @@ class Crawler(object):
         self.timed_urls = {}
 
         self.c = Client(REMOTE_ADDR='127.0.0.1')
+
+        self.plugins = []
+        for plug in Plugin.__subclasses__():
+            self.plugins.append(plug())
 
     def _parse_urls(self, url, resp):
         parsed = urlparse.urlparse(url)
@@ -56,12 +60,14 @@ class Crawler(object):
             url_path = parsed.path
             #url_path now contains the path, request_dict contains get params
 
-            try:
-                resp, returned_urls = self.get_url(from_url, url_path, request_dict)
+            #try:
+            resp, returned_urls = self.get_url(from_url, url_path, request_dict)
+            """
             except Exception, e:
                 print "Exception: %s (%s)" % (e, to_url)
                 resp = ''
                 returned_urls = []
+            """
 
             self.crawled[to_url] = True
             #Find its links
@@ -76,41 +82,40 @@ class Plugin(object):
     """
     This is a class to represent a plugin to the Crawler.
     Subclass it and define a start or stop function to be called on requests.
+    Define a print_report function if your plugin outputs at the end of the run.
     """
     request = None
     datastore = {}
 
     def __init__(self):
-        pre_request.connect(self.start)
-        post_request.connect(self.finish)
-        finish_run.connect(self.print_report)
+        if hasattr(self, 'start'):
+            pre_request.connect(self.start)
+        if hasattr(self, 'finish'):
+            post_request.connect(self.finish)
+        if hasattr(self, 'print_report'):
+            finish_run.connect(self.print_report)
 
 class Time(Plugin):
     """
     Follow the time it takes to run requests.
     """
 
-    def __init__(self):
-        #super(Time).__init__(self)
-        pre_request.connect(self.start)
-        post_request.connect(self.finish)
-
-    def start(sender, **kwargs):
-        import time
+    def start(self, sender, **kwargs):
         url = kwargs['url']
-        self.timed_urls[url] = time.time()
+        sender.timed_urls[url] = time.time()
 
-    def finish(sender, **kwargs):
-        import time
+    def finish(self, sender, **kwargs):
         cur = time.time()
         url = kwargs['url']
-        old_time = self.timed_urls[url]
+        old_time = sender.timed_urls[url]
         total_time = cur - old_time
-        self.timed_urls = total_time
+        print "Time taken: %s" % total_time
+        sender.timed_urls[url] = total_time
 
-    def print_report(self):
+    def print_report(self, sender, **kwargs):
+        print "got end"
         "Print the longest time it took for pages to load"
-        alist = sorted(self.crawled_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+        alist = sorted(sender.crawled.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, time in alist[:10]:
             print "%s took %f" % (url, time)
 
@@ -120,7 +125,7 @@ class URLConf(Plugin):
     Run after the spider is done to show what URLConf entries got hit.
     """
 
-    def print_report(self):
+    def print_report(self, sender, **kwargs):
         for pattern in self.conf_urls.keys():
             pattern = pattern.replace('^', '').replace('$', '').replace('//', '/')
             curr = re.compile(pattern)
@@ -138,18 +143,21 @@ class Graph(Plugin):
 class Sanitize(Plugin):
     "Make sure your response is good"
 
-    def finish(sender, **kwargs):
-        if CHECK_HTML:
-            if soup.find(text='&lt;') or soup.find(text='&gt;'):
-                print "%s has dirty html" % url
+    def finish(self, sender, **kwargs):
+        soup = BeautifulSoup(kwargs['response'].content)
+        if soup.find(text='&lt;') or soup.find(text='&gt;'):
+            print "%s has dirty html" % url
 
 class Pdb(Plugin):
     "Run pdb on fail"
 
-    def finish(sender, **kwargs):
+    def finish(self, sender, **kwargs):
+        url = kwargs['url']
+        resp = kwargs['response']
         if hasattr(resp, 'status_code'):
             if not resp.status_code in (200,302, 301):
                 print "FAIL: %s, Status Code: %s" % (url, resp.status_code)
-                if USE_PDB:
-                    import pdb
-                    pdb.set_trace()
+                try:
+                    import ipdb; ipdb.set_trace()
+                except:
+                    import pdb; pdb.set_trace()

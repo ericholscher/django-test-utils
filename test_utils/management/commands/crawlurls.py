@@ -29,13 +29,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
 
-        USE_PDB = options.get('pdb', False)
-        MAKE_FIXTURES = options.get('fixtures', False)
-        CHECK_HTML = options.get('html', False)
-        CHECK_TIME = options.get('time', False)
-        STORE_RESPONSE = options.get('response', False)
         VERBOSITY = int(options.get('verbosity', 1))
-        #EACH_URL = options.get('each', 100000)
 
         if settings.ADMIN_FOR:
             settings_modules = [__import__(m, {}, {}, ['']) for m in settings.ADMIN_FOR]
