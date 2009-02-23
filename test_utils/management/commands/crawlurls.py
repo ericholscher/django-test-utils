@@ -28,7 +28,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-
         VERBOSITY = int(options.get('verbosity', 1))
 
         if settings.ADMIN_FOR:
@@ -51,5 +50,5 @@ class Command(BaseCommand):
 
             #Now we have all of our URLs to test
 
-        c = Crawler('/')
+        c = Crawler('/', conf_urls=conf_urls)
         c.run()
