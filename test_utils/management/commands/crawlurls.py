@@ -28,7 +28,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        VERBOSITY = int(options.get('verbosity', 1))
+
+        verbosity = int(options.get('verbosity', 1))
 
         if settings.ADMIN_FOR:
             settings_modules = [__import__(m, {}, {}, ['']) for m in settings.ADMIN_FOR]
@@ -50,5 +51,5 @@ class Command(BaseCommand):
 
             #Now we have all of our URLs to test
 
-        c = Crawler('/', conf_urls=conf_urls)
+        c = Crawler('/', conf_urls=conf_urls, verbosity=verbosity)
         c.run()

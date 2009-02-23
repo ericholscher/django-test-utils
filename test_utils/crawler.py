@@ -3,14 +3,28 @@ from django.test.client import Client
 from BeautifulSoup import BeautifulSoup
 import re, cgi, urlparse, time
 
+def _parse_urls(url, resp):
+    parsed = urlparse.urlparse(url)
+    soup = BeautifulSoup(resp.content)
+    returned_urls = []
+    hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
+    for a in hrefs:
+        parsed_href = urlparse.urlparse(a)
+        if parsed_href.path.startswith('/') and not parsed_href.scheme:
+            returned_urls.append(a)
+        elif not parsed_href.scheme:
+            #Relative path = previous path + new path
+            returned_urls.append(parsed.path + a)
+    return returned_urls
+
 class Crawler(object):
     """
     This is a class that represents a URL crawler in python
     """
-    def __init__(self, base_url, conf_urls={}):
+    def __init__(self, base_url, conf_urls={}, verbosity=1):
         self.base_url = base_url
         self.conf_urls = conf_urls
-        self.VERBOSITY = 1
+        self.verbosity = verbosity
 
         #These two are what keep track of what to crawl and what has been.
         self.not_crawled = [('START',self.base_url)]
@@ -24,19 +38,7 @@ class Crawler(object):
             if active:
                 self.plugins.append(plug())
 
-    def _parse_urls(self, url, resp):
-        parsed = urlparse.urlparse(url)
-        soup = BeautifulSoup(resp.content)
-        returned_urls = []
-        hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
-        for a in hrefs:
-            parsed_href = urlparse.urlparse(a)
-            if parsed_href.path.startswith('/') and not parsed_href.scheme:
-                returned_urls.append(a)
-            elif not parsed_href.scheme:
-                #Relative path = previous path + new path
-                returned_urls.append(parsed.path + a)
-        return returned_urls
+
 
     def get_url(self, from_url, to_url):
         """
@@ -48,40 +50,34 @@ class Crawler(object):
         url_path = parsed.path
         #url_path now contains the path, request_dict contains get params
 
-        if self.VERBOSITY > 0:
+        if self.verbosity > 0:
             print "Getting %s (%s) from (%s)" % (to_url, request_dict, from_url)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
         resp = self.c.get(url_path, request_dict)
         test_signals.post_request.send(self, url=to_url, response=resp)
-
-        returned_urls = self._parse_urls(to_url, resp)
+        returned_urls = _parse_urls(to_url, resp)
+        test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
         return (resp, returned_urls)
 
     def run(self):
         test_signals.start_run.send(self)
-
         while len(self.not_crawled) > 0:
             #Take top off not_crawled and evaluate it
             from_url, to_url = self.not_crawled.pop(0)
+            #try:
             resp, returned_urls = self.get_url(from_url, to_url)
-
             """
-            try:
-                resp, returned_urls = self.get_url(from_url, url_path)
             except Exception, e:
                 print "Exception: %s (%s)" % (e, to_url)
-                resp = ''
-                returned_urls = []
+                continue
             """
             self.crawled[to_url] = True
-            #Find its links
+            #Find its links that haven't been crawled
             for base_url in returned_urls:
                 if base_url not in [to for fro,to in self.not_crawled] and not self.crawled.has_key(base_url):
                     self.not_crawled.append((to_url, base_url))
-
         test_signals.finish_run.send(self)
-        return self.crawled
 
 class Plugin(object):
     """
@@ -92,12 +88,16 @@ class Plugin(object):
     global_data = {}
 
     def __init__(self):
-        if hasattr(self, 'start'):
-            test_signals.pre_request.connect(self.start)
-        if hasattr(self, 'finish'):
-            test_signals.post_request.connect(self.finish)
-        if hasattr(self, 'print_report'):
-            test_signals.finish_run.connect(self.print_report)
+        if hasattr(self, 'pre_request'):
+            test_signals.pre_request.connect(self.pre_request)
+        if hasattr(self, 'post_request'):
+            test_signals.post_request.connect(self.post_request)
+        if hasattr(self, 'start_run'):
+            test_signals.start_run.connect(self.start_run)
+        if hasattr(self, 'finish_run'):
+            test_signals.finish_run.connect(self.finish_run)
+        if hasattr(self, 'urls_parsed'):
+            test_signals.urls_parsed.connect(self.urls_parsed)
 
         self.data = self.global_data[self.__class__.__name__] = {}
 
@@ -114,13 +114,16 @@ class Time(Plugin):
     """
     Follow the time it takes to run requests.
     """
-    timed_urls = {}
 
-    def start(self, sender, **kwargs):
+    def __init__(self):
+        super(Time, self).__init__()
+        self.timed_urls = self.data['timed_urls'] = {}
+
+    def pre_request(self, sender, **kwargs):
         url = kwargs['url']
         self.timed_urls[url] = time.time()
 
-    def finish(self, sender, **kwargs):
+    def post_request(self, sender, **kwargs):
         cur = time.time()
         url = kwargs['url']
         old_time = self.timed_urls[url]
@@ -128,7 +131,7 @@ class Time(Plugin):
         self.timed_urls[url] = total_time
         print "Time taken: %s" % self.timed_urls[url]
 
-    def print_report(self, sender, **kwargs):
+    def finish_run(self, sender, **kwargs):
         "Print the longest time it took for pages to load"
         alist = sorted(self.timed_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, ttime in alist[:10]:
@@ -140,7 +143,7 @@ class URLConf(Plugin):
     Run after the spider is done to show what URLConf entries got hit.
     """
 
-    def print_report(self, sender, **kwargs):
+    def finish_run(self, sender, **kwargs):
         for pattern in sender.conf_urls.keys():
             pattern = pattern.replace('^', '').replace('$', '').replace('//', '/')
             curr = re.compile(pattern)
@@ -154,11 +157,29 @@ class URLConf(Plugin):
 class Graph(Plugin):
     "Make pretty graphs of your requests"
 
+    def __init__(self):
+        super(Graph, self).__init__()
+        self.request_graph = self.data['request_graph'] = {}
+        import pygraphviz
+        self.graph = pygraphviz.AGraph(directed=True)
+
+    def urls_parsed(self, sender, fro, returned_urls, **kwargs):
+        from_node = self.graph.add_node(str(fro), shape='tripleoctagon')
+        for url in returned_urls:
+            if not self.graph.has_node(str(url)):
+                node = self.graph.add_node(str(url))
+            self.graph.add_edge(str(fro), str(url))
+
+    def finish_run(self, sender, **kwargs):
+        import ipdb; ipdb.set_trace()
+        print "Making graph of your URLs, this may take a while"
+        self.graph.layout(prog='dot')
+        self.graph.draw('my_urls.svg')
 
 class Sanitize(Plugin):
     "Make sure your response is good"
 
-    def finish(self, sender, **kwargs):
+    def post_request(self, sender, **kwargs):
         soup = BeautifulSoup(kwargs['response'].content)
         if soup.find(text='&lt;') or soup.find(text='&gt;'):
             print "%s has dirty html" % url
@@ -167,7 +188,7 @@ class Pdb(Plugin):
     "Run pdb on fail"
     active = False
 
-    def finish(self, sender, **kwargs):
+    def post_request(self, sender, **kwargs):
         url = kwargs['url']
         resp = kwargs['response']
         if hasattr(resp, 'status_code'):
