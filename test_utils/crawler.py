@@ -89,7 +89,7 @@ class Plugin(object):
     Subclass it and define a start or stop function to be called on requests.
     Define a print_report function if your plugin outputs at the end of the run.
     """
-    datastore = {}
+    global_data = {}
 
     def __init__(self):
         if hasattr(self, 'start'):
@@ -98,6 +98,17 @@ class Plugin(object):
             test_signals.post_request.connect(self.finish)
         if hasattr(self, 'print_report'):
             test_signals.finish_run.connect(self.print_report)
+
+        self.data = self.global_data[self.__class__.__name__] = {}
+
+    """
+    #These functions enable instance['test'] to save to instance.data
+    def __setitem__(self, key, val):
+        self.global_data[self.__class__.__name__][key] = val
+
+    def __getitem__(self, key):
+        return self.global_data[self.__class__.__name__][key]
+    """
 
 class Time(Plugin):
     """
