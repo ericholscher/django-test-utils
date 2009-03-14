@@ -21,7 +21,7 @@ class Crawler(object):
     """
     This is a class that represents a URL crawler in python
     """
-    def __init__(self, base_url, conf_urls={}, verbosity=1):
+    def __init__(self, base_url, conf_urls={}, verbosity=1, **kwargs):
         self.base_url = base_url
         self.conf_urls = conf_urls
         self.verbosity = verbosity
@@ -37,7 +37,6 @@ class Crawler(object):
             active = getattr(plug, 'active', True)
             if active:
                 self.plugins.append(plug())
-
 
 
     def get_url(self, from_url, to_url):
@@ -156,6 +155,7 @@ class URLConf(Plugin):
 
 class Graph(Plugin):
     "Make pretty graphs of your requests"
+    active = False
 
     def __init__(self):
         super(Graph, self).__init__()
@@ -168,13 +168,12 @@ class Graph(Plugin):
         for url in returned_urls:
             if not self.graph.has_node(str(url)):
                 node = self.graph.add_node(str(url))
-            self.graph.add_edge(str(fro), str(url))
+                self.graph.add_edge(str(fro), str(url))
 
     def finish_run(self, sender, **kwargs):
-        import ipdb; ipdb.set_trace()
         print "Making graph of your URLs, this may take a while"
-        self.graph.layout(prog='dot')
-        self.graph.draw('my_urls.svg')
+        self.graph.layout(prog='fdp')
+        self.graph.draw('my_urls.png')
 
 class Sanitize(Plugin):
     "Make sure your response is good"
