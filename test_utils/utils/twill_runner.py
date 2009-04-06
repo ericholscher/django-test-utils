@@ -1,4 +1,10 @@
-"""Integrates the twill web browsing scripting language with Django.
+"""
+
+This code is originally by miracle2k:
+http://bitbucket.org/miracle2k/djutils/src/97f92c32c621/djutils/test/twill.py
+
+
+Integrates the twill web browsing scripting language with Django.
 
 Provides too main functions, ``setup()`` and ``teardown``, that hook
 (and unhook) a certain host name to the WSGI interface of your Django
