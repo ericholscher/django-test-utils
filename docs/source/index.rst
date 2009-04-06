@@ -10,7 +10,9 @@ Source Code
 
 The code for Django-test-utils is available at `Github
 <http://github.com/ericholscher/django-test-utils/tree/master>`__ and
-`Pypi <http://pypi.python.org/pypi/django-test-utils/0.2>`__
+`Pypi <http://pypi.python.org/pypi/django-test-utils/0.2>`__.
+
+If you have any questions, please contact `Eric Holscher <http://ericholscher.com>`__ at eric@ericholscher.com
 
 Contents
 --------
