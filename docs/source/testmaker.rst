@@ -77,8 +77,7 @@ needed something unique :)) You also may notice that there is
 rudimentary support for template tags; this will be explained upon in
 my `next post <http://ericholscher.com/blog/2008/nov/27/value-
 conventions/>`__. However, for now know that it only works for
-template tags that don't set a context variable, or use the format `as
-` to set one.
+template tags that don't set a context variable, or use the format `as` to set one.
 
 
 Improvements over 0.1
