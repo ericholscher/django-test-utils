@@ -71,6 +71,7 @@ class Serializer(object):
             'name': self.name,
             'time': time.time(),
             'path': request.path,
+
             'get': request.GET,
             'post': request.POST,
             'arg_dict': request.REQUEST,
@@ -84,6 +85,7 @@ class Serializer(object):
             'name': self.name,
             'time': time.time(),
             'path': path,
+           
             'context': response.context,
             'content': response.content,
             'status_code': response.status_code,
