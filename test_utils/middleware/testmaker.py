@@ -1,13 +1,14 @@
 from django.conf import settings
 from django.test import Client
 from django.test.utils import setup_test_environment
-import logging, re, os, copy
 from django.utils.encoding import force_unicode
 from django import template
 from django.template.defaultfilters import slugify as base_slugify
+import logging, re, os, copy
 import time
 import cPickle as pickle
 from cStringIO import StringIO
+from test_utils.templatetags import DEFAULT_TAGS
 
 log = logging.getLogger('testmaker')
 ser = logging.getLogger('testserializer')
@@ -17,29 +18,33 @@ ser = logging.getLogger('testserializer')
 debug = getattr(settings, 'DEBUG', False)
 if not debug:
     print "THIS CODE IS NOT MEANT FOR USE IN PRODUCTION"
-    #return
 else:
     print "Loaded Testmaker Middleware"
 
-DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
-'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
-'ifchanged' , 'ifequal' , 'ifnotequal' , 'include' , 'load' , 'now' ,
-'regroup' , 'spaceless' , 'ssi' , 'templatetag' , 'url' , 'widthratio' ,
-'with' ]
-
-tag_re = re.compile('({% (.*?) %})')
-
 def slugify(toslug):
-    """docstring for slugify"""
-    return re.sub("-","_",base_slugify(toslug))
+    """
+    Turn dashs into underscores to sanitize for filenames
+    """
+    return re.sub("-", "_", base_slugify(toslug))
 
 class TestMakerMiddleware(object):
     def __init__(self):
-        """Assign a Serializer and Processer"""
+        """
+        Assign a Serializer and Processer
+
+        Serializers will be pluggable and allow for custom recording.
+        Processers will process the serializations into test formats.
+        """
         self.serializer = Serializer()
         self.processer = Processer()
 
     def process_request(self, request):
+        """
+        Run the request through the testmaker middleware.
+        This outputs the requests to the chosen Serializers.
+        Possible running it through one or many Processors
+        """
+        #This is request.REQUEST to catch POST and GET
         if 'test_client_true' not in request.REQUEST:
             self.serializer.save_request(request)
             if request.method.lower() == "get":
@@ -47,55 +52,67 @@ class TestMakerMiddleware(object):
                 c = Client(REMOTE_ADDR='127.0.0.1')
                 getdict = request.GET.copy()
                 getdict['test_client_true'] = 'yes' #avoid recursion
-                r = c.get(request.path, getdict)
-                self.serializer.save_response(request.path, r)
-                self.processer.process_req(request,(request.path,r))
+                response = c.get(request.path, getdict)
+                self.serializer.save_response(request.path, response)
+                self.processer.process(request, response)
 
 
 class Serializer(object):
     """A pluggable Serializer class"""
 
-    def __init__(self):
+    def __init__(self, name='default'):
         """Constructor"""
-        self.strio_buffer = StringIO()
+        self.data = {}
+        self.name = name
 
-    def save_request(self,request):
+    def save_request(self, request):
         """Saves the Request to the serialization stream"""
-        pickle.dump(request,self.strio_buffer,pickle.HIGHEST_PROTOCOL)
+        request_dict = {
+            'name': self.name,
+            'time': time.time(),
+            'path': request.path,
+            'get': request.GET,
+            'post': request.POST,
+            'arg_dict': request.REQUEST,
+        }
+        ser.info(pickle.dumps(request_dict))
+        ser.info('---REQUEST_BREAK---')
 
-    def save_response(self,path, request):
+    def save_response(self, path, response):
         """Saves the Response-like objects information that might be tested"""
-        pickle.dump((path,request),self.strio_buffer,pickle.HIGHEST_PROTOCOL)
-
-    def flush(self):
-        """Flush buffered Serialization data to disk"""
-        ser.info(self.strio_buffer)
-        self.strio_buffer = StringIO()
-
+        response_dict = {
+            'name': self.name,
+            'time': time.time(),
+            'path': path,
+            'context': response.context,
+            'content': response.content,
+            'status_code': response.status_code,
+            'cookies': response.cookies,
+            'headers': response._headers,
+        }
+        ser.info(pickle.dumps(response_dict))
+        ser.info('---RESPONSE_BREAK---')
 
 class Processer(object):
     """Processes the serialized data. Generally to create some sort of test cases"""
 
     def __init__(self):
-        """Constructor"""
+        """
+        At some point this will hold where we choose what processor(s) to use
+        """
         pass
 
-    def process_req(self,request,rtuple):
+    def process(self, request, response):
         """Turn the 2 requests into a unittest"""
         self.log_request(request)
-        response = rtuple[1]
-        self.log_status(rtuple[0], response)
+        self.log_status(request.path, response)
         if response.context and response.status_code != 404:
-            user_context = get_user_context(response.context)
-            output_user_context(user_context)
-            try:
-                output_ttag_tests(user_context, response.template[0])
-            except Exception, e:
-                #Another hack
-                log.error("Error! %s" % e)
+            user_context = self.get_user_context(response.context)
+            self.output_user_context(user_context)
+            #This is where template tag outputting would go
 
 
-    def log_request(self,request):
+    def log_request(self, request):
         #pickle.dump(request,stio_buffer,pickle.HIGHEST_PROTOCOL)
         #log.info(stio_buffer)
 
@@ -108,7 +125,7 @@ class Processer(object):
         request_str += "}"
         log.info("\t\tr = c.%s(%s)" % (method, request_str))
 
-    def log_status(self,path, request):
+    def log_status(self, path, request):
         #pickle.dump((path,request), stio_buffer,pickle.HIGHEST_PROTOCOL)
         #log.info(stio_buffer)
 
@@ -116,7 +133,7 @@ class Processer(object):
         if request.status_code in [301, 302]:
             log.info("\t\tself.assertEqual(r['Location'], %s)" % request['Location'])
 
-    def get_user_context(self,context_list):
+    def get_user_context(self, context_list):
         #Ugly Hack. Needs to be a better way
         if isinstance(context_list, list):
             context_list = context_list[-1] #Last context rendered
@@ -140,59 +157,3 @@ class Processer(object):
             except UnicodeDecodeError, e:
                 pass
 
-    ### Template Tag Maker stuff
-
-    def output_ttag_tests(self,context, templ):
-        #Loaded classes persist so this is hacked in.
-        loaded_classes = []
-        for dir in settings.TEMPLATE_DIRS:
-            if os.path.exists(os.path.join(dir, templ.name)):
-                template_file = open(os.path.join(dir,templ.name))
-                temp_string = template_file.read()
-                for line in temp_string.split('\n'):
-                    loaded_classes = parse_template_line(line, loaded_classes, context)
-
-    def parse_template_line(self,line, loaded_classes, context):
-        #Context (that we care about) is just for a single tag
-        out_context = {}
-        context_names = []
-        mat = tag_re.search(line)
-        if mat:
-            bits = mat.group(2).split() #tokens
-            cmd = bits.pop(0).strip()
-            if cmd == 'load':
-                loaded_classes.append(mat.group(0))
-            if cmd not in DEFAULT_TAGS and cmd not in 'end'.join(DEFAULT_TAGS):
-                for bit_num, bit in enumerate(bits):
-                    try:
-                        out_context[bit] = template.Variable(bit).resolve(context)
-                    except:
-                        pass
-                    if bit == 'as':
-                        context_names.append(bits[bit_num+1])
-                create_ttag_string(context_names, out_context, loaded_classes, mat.group(0))
-        return loaded_classes
-
-    def create_ttag_string(self,context_names, out_context, loaded_classes, tag_string):
-        con_string = ""
-        for var in context_names:
-            con_string += "{{ %s }}" % var
-        template_string = "%s%s%s" % (''.join(loaded_classes), tag_string, con_string)
-        template_obj = template.Template(template_string)
-        rendered_string = template_obj.render(template.Context(out_context))
-        output_ttag(template_string, rendered_string, out_context)
-
-    def output_ttag(self,template_str, output_str, context):
-        log.info('''\t\ttmpl = template.Template(u"""%s""")''' % template_str)
-        context_str = "{"
-        for con in context:
-            try:
-                tmpl_obj = context[con]
-                context_str += "'%s': get_model('%s', '%s').objects.get(pk=%s)," % (con, tmpl_obj._meta.app_label, tmpl_obj._meta.module_name, tmpl_obj.pk )
-            except:
-                #sometimes there be integers here
-                pass
-        context_str += "}"
-
-        log.info('''\t\tcontext = template.Context(%s)''' % context_str)
-        log.info('''\t\tself.assertEqual(tmpl.render(context), u"""%s""")''' % output_str)

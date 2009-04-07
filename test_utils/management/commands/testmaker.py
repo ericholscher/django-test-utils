@@ -73,8 +73,6 @@ class Command(AppCommand):
         handler_s.setFormatter(logging.Formatter('%(message)s'))
         log_s.addHandler(handler_s)
 
-
-
         if new_tests:
             #TODO Use a template for this
             log.info('from django.test import TestCase')
