@@ -2,6 +2,7 @@ import re
 import os
 from django.conf import settings
 from django.template.loaders.filesystem import load_template_source
+from django import template
 
 DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
 'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
@@ -17,11 +18,19 @@ tag_re = re.compile('({% (.*?) %})')
 
 class TemplateParser(object):
 
-    def __init__(self, template):
+    def __init__(self, template, context=None):
+        """
+        Set the initial value of the template to be parsed
+
+        Allows for the template passed to be a string of a template name
+        or a string that represents a template.
+        """
         self.template = template
+        self.context = context
         #Contains the strings of all loaded classes
         self.loaded_classes = []
         self.template_calls = []
+        self.tests = []
         #Accept both template names and template strings
         try:
             self.template_string, self.filepath = load_template_source(template)
@@ -49,20 +58,39 @@ class TemplateParser(object):
                         if cmd == 'load':
                             self.loaded_classes.append(full_command)
                         else:
-                            #Parse structure here?
-                            self.template_calls.append(full_command)
+                            if cmd not in DEFAULT_TAGS and cmd not in 'end'.join(DEFAULT_TAGS):
+                                self.template_calls.append(full_command)
 
 
-    def create_ttag_string(self, context_names, out_context, tag_string):
-        con_string = ""
-        for var in context_names:
-            con_string += "{{ %s }}" % var
-        template_string = "%s%s%s" % (''.join(loaded_classes), tag_string, con_string)
-        template_obj = template.Template(template_string)
-        rendered_string = template_obj.render(template.Context(out_context))
-        output_ttag(template_string, rendered_string, out_context)
+    def create_tests(self):
+        """
+        This yields a rendered template string to assert Equals against with
+        the outputted template.
+        """
+        for tag_string in self.template_calls:
+                #Try and find anything in the string that's in the context
+                context_name = ''
+                bits = tag_string.split()
+                for bit_num, bit in enumerate(bits):
+                    try:
+                        out_context[bit] = template.Variable(bit).resolve(self.context)
+                    except:
+                        pass
+                    if bit == 'as':
+                        context_name = bits[bit_num+1]
 
-    def output_ttag(self,template_str, output_str, context):
+                con_string = "{{ %s }}" % context_name
+                template_string = "%s%s%s" % (''.join(self.loaded_classes), tag_string, con_string)
+                import ipdb; ipdb.set_trace()
+                try:
+                    template_obj = template.Template(template_string)
+                    rendered_string = template_obj.render(template.Context(out_context))
+                except Exception, e:
+                    print "EXCEPTION: %s" % e.message
+                #self.tests.append(rendered_string)
+                self.output_ttag(template_string, rendered_string, out_context)
+
+    def output_ttag(self, template_str, output_str, context):
         log.info('''\t\ttmpl = template.Template(u"""%s""")''' % template_str)
         context_str = "{"
         for con in context:
@@ -78,40 +106,7 @@ class TemplateParser(object):
         log.info('''\t\tself.assertEqual(tmpl.render(context), u"""%s""")''' % output_str)
 
 
-    def parse_ttag(self, token, required_tags=[], optional_tags=['as', 'for', 'limit', 'exclude']):
-        """
-        A function to parse a template tag.
-        Pass in the token to parse, and a list of keywords to look for.
-
-        It sets the name of the tag to 'tag_name' in the hash returned.
-
-        Default list of optional keywords is::
-            ['as', 'for', 'limit', 'exclude']
-
-        >>> from django.template import Token, TOKEN_TEXT
-        >>> from test_utils.templatetags.utils import parse_ttag
-        >>> parse_ttag('super_cool_tag for my_object as bob', ['as'])
-        {'tag_name': u'super_cool_tag', u'as': u'bob'}
-        >>> parse_ttag('super_cool_tag for my_object as bob', ['as', 'for'])
-        {'tag_name': u'super_cool_tag', u'as': u'bob', u'for': u'my_object'}
-
-        """
-
-        if isinstance(token, template.Token):
-            bits = token.split_contents()
-        else:
-            bits = token.split(' ')
-        tags = {'tag_name': bits.pop(0)}
-        for index, bit in enumerate(bits):
-            bit = bit.strip()
-            if bit in required_tags or bit in optional_tags:
-                if len(bits) != index-1:
-                    tags[bit.strip()] = bits[index+1]
-        return tags
-
 if __name__ == "__main__":
-    t = TemplateParser('admin_doc/view_index.html')
+    t = TemplateParser('{% load ratingtags %} {% get_rating for object as test %}')
     t.parse()
-    #from django.template import Context
-    #t.output_tests(Context({'blah': 'BLAH'}))
-    print '\n'.join(t.template_calls)
+    t.create_tests()
