@@ -25,6 +25,7 @@ Contents
    crawler
    test_runner
    twill_runner
+   keep_database_runner
 
 Indices and tables
 ==================
