@@ -26,6 +26,7 @@ Contents
    test_runner
    twill_runner
    keep_database_runner
+   mocks
 
 Indices and tables
 ==================
