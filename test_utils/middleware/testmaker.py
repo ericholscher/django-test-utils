@@ -1,13 +1,14 @@
+import logging
+import re
+import time
+import cPickle as pickle
+
 from django.conf import settings
 from django.test import Client
 from django.test.utils import setup_test_environment
 from django.utils.encoding import force_unicode
-from django import template
 from django.template.defaultfilters import slugify as base_slugify
-import logging, re, os, copy
-import time
-import cPickle as pickle
-from cStringIO import StringIO
+
 from test_utils.templatetags import DEFAULT_TAGS
 
 log = logging.getLogger('testmaker')
@@ -60,6 +61,8 @@ class TestMakerMiddleware(object):
 class Serializer(object):
     """A pluggable Serializer class"""
 
+    name = "default"
+
     def __init__(self, name='default'):
         """Constructor"""
         self.data = {}
@@ -85,7 +88,7 @@ class Serializer(object):
             'name': self.name,
             'time': time.time(),
             'path': path,
-           
+
             'context': response.context,
             'content': response.content,
             'status_code': response.status_code,
@@ -158,4 +161,3 @@ class Processer(object):
                     log.info(u'''\t\tself.assertEqual(unicode(r.context[-1]["""%s"""]), u"""%s""")''' % (var, force_unicode(context[var])))
             except UnicodeDecodeError, e:
                 pass
-
