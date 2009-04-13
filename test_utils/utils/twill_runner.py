@@ -18,6 +18,7 @@ specify the target url as arguments to Django's ``reverse()``.
 
 Usage:
 
+    from test_utils.utils import twill_runner as twill
     twill.setup()
     try:
         twill.go('/')                     # --> Django WSGI

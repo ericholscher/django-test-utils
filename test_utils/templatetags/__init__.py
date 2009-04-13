@@ -12,8 +12,6 @@ DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
 
 tag_re = re.compile('({% (.*?) %})')
 
-#output_ttag_tests(user_context, response.template[0])
-
 ### Template Tag Maker stuff
 
 class TemplateParser(object):
