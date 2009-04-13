@@ -1,0 +1,30 @@
+class Plugin(object):
+    """
+    This is a class to represent a plugin to the Crawler.
+    Subclass it and define a start or stop function to be called on requests.
+    Define a print_report function if your plugin outputs at the end of the run.
+    """
+    global_data = {}
+
+    def __init__(self):
+        if hasattr(self, 'pre_request'):
+            test_signals.pre_request.connect(self.pre_request)
+        if hasattr(self, 'post_request'):
+            test_signals.post_request.connect(self.post_request)
+        if hasattr(self, 'start_run'):
+            test_signals.start_run.connect(self.start_run)
+        if hasattr(self, 'finish_run'):
+            test_signals.finish_run.connect(self.finish_run)
+        if hasattr(self, 'urls_parsed'):
+            test_signals.urls_parsed.connect(self.urls_parsed)
+
+        self.data = self.global_data[self.__class__.__name__] = {}
+
+    """
+    #These functions enable instance['test'] to save to instance.data
+    def __setitem__(self, key, val):
+        self.global_data[self.__class__.__name__][key] = val
+
+    def __getitem__(self, key):
+        return self.global_data[self.__class__.__name__][key]
+    """
