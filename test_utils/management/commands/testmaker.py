@@ -1,14 +1,12 @@
-from django.core.management.base import AppCommand, CommandError
 from optparse import make_option
-import sys, logging, os, re
+import sys, logging, os
 from os import path
+
+from django.core.management.base import AppCommand, CommandError
 from django.db.models import get_model, get_models, get_app
-from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core import serializers
-from django.test.signals import template_rendered
 from django.conf import settings
 from django.core.management import call_command
-
 
 class Command(AppCommand):
     option_list = AppCommand.option_list + (
@@ -90,7 +88,7 @@ class Command(AppCommand):
 
         if verbosity > 0:
             print "Inserting TestMaker logging server..."
-        settings.MIDDLEWARE_CLASSES += ('test_utils.middleware.testmaker.TestMakerMiddleware',)
+        settings.MIDDLEWARE_CLASSES += ('test_utils.testmaker.middleware.testmaker.TestMakerMiddleware',)
 
         try:
             call_command('runserver', addrport=addrport, use_reloader=False)
