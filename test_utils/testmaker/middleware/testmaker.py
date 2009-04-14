@@ -32,6 +32,7 @@ class TestMakerMiddleware(object):
         #This is request.REQUEST to catch POST and GET
         if 'test_client_true' not in request.REQUEST:
             self.serializer.save_request(request)
+            self.processer.process_request(request)
             if request.method.lower() == "get":
                 setup_test_environment()
                 c = Client(REMOTE_ADDR='127.0.0.1')
@@ -39,4 +40,4 @@ class TestMakerMiddleware(object):
                 getdict['test_client_true'] = 'yes' #avoid recursion
                 response = c.get(request.path, getdict)
                 self.serializer.save_response(request.path, response)
-                self.processer.process(request, response)
+                self.processer.process_response(request, response)

@@ -41,5 +41,9 @@ class Serializer(object):
             'cookies': response.cookies,
             'headers': response._headers,
         }
-        ser.info(pickle.dumps(response_dict))
-        ser.info('---RESPONSE_BREAK---')
+        try:
+            ser.info(pickle.dumps(response_dict))
+            ser.info('---RESPONSE_BREAK---')
+        except (TypeError, pickle.PicklingError):
+            #Can't pickle wsgi.error objects
+            pass

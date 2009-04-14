@@ -23,9 +23,12 @@ class Processer(object):
         """
         pass
 
-    def process(self, request, response):
-        """Turn the 2 requests into a unittest"""
+    def process_request(self, request):
+        """Turn the request into a unittest"""
         self.log_request(request)
+
+    def process_response(self, request, response):
+        """Turn the response into a unittest"""
         self.log_status(request.path, response)
         if response.context and response.status_code != 404:
             user_context = self.get_user_context(response.context)
@@ -34,22 +37,16 @@ class Processer(object):
 
 
     def log_request(self, request):
-        #pickle.dump(request,stio_buffer,pickle.HIGHEST_PROTOCOL)
-        #log.info(stio_buffer)
-
         log.info('\n\tdef test_%s_%s(self): ' % (slugify(request.path), slugify(time.time())))
         method = request.method.lower()
         request_str = "'%s', {" % request.path
         for dikt in request.REQUEST.dicts:
             for arg in dikt:
-                request_str += "' %s ': ' %s ', " % (arg, request.REQUEST[arg])
+                request_str += "'%s': '%s', " % (arg, request.REQUEST[arg])
         request_str += "}"
         log.info("\t\tr = c.%s(%s)" % (method, request_str))
 
     def log_status(self, path, request):
-        #pickle.dump((path,request), stio_buffer,pickle.HIGHEST_PROTOCOL)
-        #log.info(stio_buffer)
-
         log.info("\t\tself.assertEqual(r.status_code, %s)" % request.status_code)
         if request.status_code in [301, 302]:
             log.info("\t\tself.assertEqual(r['Location'], %s)" % request['Location'])
