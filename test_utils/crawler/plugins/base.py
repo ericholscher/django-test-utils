@@ -1,3 +1,5 @@
+from test_utils import signals as test_signals
+
 class Plugin(object):
     """
     This is a class to represent a plugin to the Crawler.
@@ -7,6 +9,9 @@ class Plugin(object):
     global_data = {}
 
     def __init__(self):
+        #This should be refactored to call each of the subclasses.
+        #Having them use the signal function signature is hacky..
+
         if hasattr(self, 'pre_request'):
             test_signals.pre_request.connect(self.pre_request)
         if hasattr(self, 'post_request'):

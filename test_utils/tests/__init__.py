@@ -1,4 +1,5 @@
-from templatetags import Parsing
+from templatetags import *
+from testmaker_tests import *
 import twill_tests
 
 __test__ =  {
