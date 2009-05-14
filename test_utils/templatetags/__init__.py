@@ -103,8 +103,3 @@ class TemplateParser(object):
         log.info('''\t\tcontext = template.Context(%s)''' % context_str)
         log.info('''\t\tself.assertEqual(tmpl.render(context), u"""%s""")''' % output_str)
 
-
-if __name__ == "__main__":
-    t = TemplateParser('{% load ratingtags %} {% get_rating for object as test %}')
-    t.parse()
-    t.create_tests()

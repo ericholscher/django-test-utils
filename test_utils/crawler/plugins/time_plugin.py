@@ -1,4 +1,5 @@
 from base import Plugin
+import time
 
 class Time(Plugin):
     """

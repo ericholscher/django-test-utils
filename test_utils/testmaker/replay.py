@@ -10,16 +10,16 @@ res_re = re.compile('---RESPONSE_BREAK---')
 
 for line in f.readlines():
     if req_re.search(line):
+        #process request
         to_pickle = ''.join(buffer)
         obj = pickle.loads(to_pickle)
         print obj['path'], obj['time']
         buffer = []
     elif res_re.search(line):
+        #process response
         to_pickle = ''.join(buffer)
         obj = pickle.loads(to_pickle)
         print obj['status_code'], obj['time']
         buffer = []
     else:
         buffer.append(line)
-
-
