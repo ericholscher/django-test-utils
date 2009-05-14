@@ -1,12 +1,11 @@
 """
 This file is to test testmaker. It will run over the polls app and with the crawler and with test maker outputting things. Hopefully this will provide a sane way to test testmaker.
 """
-
-
 from django.test.testcases import TestCase
 from django.template import Context, Template
 from django.contrib.auth.models import User
 from test_utils.crawler.base import Crawler
+from test_utils.testmaker import setup_logging
 from django.conf import settings
 import logging, os, sys, re
 
@@ -33,21 +32,10 @@ class TestMakerTests(TestCase):
     fixtures = ['/Users/ericholscher/lib/django-test-utils/test_utils/tests/polls/fixtures/polls_testmaker.json']
 
     def setUp(self):
-        log = logging.getLogger('testmaker')
-        log.setLevel(logging.INFO)
-        handler = logging.FileHandler('test_file', 'a')
-        handler.setFormatter(logging.Formatter('%(message)s'))
-        log.addHandler(handler)
-
-        log_s = logging.getLogger('testserializer')
-        log_s.setLevel(logging.INFO)
-        handler_s = logging.FileHandler('serialize_file', 'a')
-        handler_s.setFormatter(logging.Formatter('%(message)s'))
-        log_s.addHandler(handler_s)
+        setup_logging('test_file', 'serialize_file')
 
     def tearDown(self):
         #Teardown logging somehow?
-        pass
         os.remove('test_file')
         os.remove('serialize_file')
 
