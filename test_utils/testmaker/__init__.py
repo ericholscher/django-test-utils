@@ -1,7 +1,10 @@
 import logging
+import os
+from os import path
 from django.core import serializers
 from test_utils.management.commands.relational_dumpdata import _relational_dumpdata
 from django.template import Context, Template
+from django.conf import settings
 
 TESTMAKER_TEMPLATE = """
 from django.test import TestCase
@@ -59,9 +62,9 @@ def setup_testmaker(app, verbosity=1, create_fixtures=False, format='xml', addrp
     new_tests = True
 
     #Figure out where to store data
+    fixtures_dir = path.join(base_dir, 'fixtures')
+    fixture_file = path.join(fixtures_dir, '%s_testmaker.%s' % (app_name, format))
     if create_fixtures:
-        fixtures_dir = path.join(base_dir, 'fixtures')
-        fixture_file = path.join(fixtures_dir, '%s_testmaker.%s' % (app_name, format))
         if not path.exists(fixtures_dir):
             os.mkdir(fixtures_dir)
 
