@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import *
-from test_utils.tests.polls.models import Poll, Choice
+from models import Poll, Choice
 
 info_dict = {
     'queryset': Poll.objects.all(),
