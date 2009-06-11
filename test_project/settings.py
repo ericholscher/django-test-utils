@@ -6,9 +6,7 @@ PROJECT_DIR = os.path.dirname(__file__)
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
-ADMINS = (
-    # ('Eric', 'eric@ericholscher.com'),
-)
+ADMINS = ()
 
 MANAGERS = ADMINS
 
@@ -62,10 +60,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
-ROOT_URLCONF = 'test.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
-    '/Users/ericholscher/lib/test/templates',
+    os.path.join(PROJECT_DIR, 'templates')
 )
 
 INSTALLED_APPS = (
@@ -74,8 +72,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
-    'django.contrib.admindocs',
-    'test_utils.tests.polls',
-    'test_utils',
-    'django_extensions',
+    'polls',
+    'test_app',
 )

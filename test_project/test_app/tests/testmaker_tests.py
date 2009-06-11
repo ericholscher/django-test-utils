@@ -14,7 +14,7 @@ class CrawlerTests(TestCase):
     Tests to test the Crawler API
     """
     urls = "test_utils.tests.polls.urls"
-    fixtures = ['/Users/ericholscher/lib/django-test-utils/test_utils/tests/polls/fixtures/polls_testmaker.json']
+    fixtures = ['polls_testmaker.json']
 
     def test_basic_crawling(self):
         conf_urls = {}
@@ -29,7 +29,7 @@ class TestMakerTests(TestCase):
     Tests to test basic testmaker functionality.
     """
     urls = "test_utils.tests.polls.urls"
-    fixtures = ['/Users/ericholscher/lib/django-test-utils/test_utils/tests/polls/fixtures/polls_testmaker.json']
+    fixtures = ['polls_testmaker.json']
 
     def setUp(self):
         setup_logging('test_file', 'serialize_file')
