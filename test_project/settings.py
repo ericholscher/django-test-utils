@@ -74,4 +74,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'polls',
     'test_app',
+    'south',
+    #'django_extensions'
 )
