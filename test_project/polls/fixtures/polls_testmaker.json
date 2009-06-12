@@ -4,7 +4,8 @@
         "model": "polls.poll", 
         "fields": {
             "pub_date": "2007-04-01 00:00:00", 
-            "question": "What's up?"
+            "question": "What's up?", 
+            "slug": "whats-up"
         }
     }, 
     {
@@ -12,7 +13,8 @@
         "model": "polls.poll", 
         "fields": {
             "pub_date": "2009-04-25 21:46:44", 
-            "question": "Test poll"
+            "question": "Test poll", 
+            "slug": "test-poll"
         }
     }, 
     {
