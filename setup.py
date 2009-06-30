@@ -9,5 +9,6 @@ setup(
     description = "A package to help testing in Django",
     url = "http://github.com/ericholscher/django-test-utils/tree/master",
     download_url='http://www.github.com/ericholscher/django-test-utils/tarball/0.3.0',
-    include_package_data = True
-)
+    test_suite = "test_project.runtests.runtests",
+    include_package_data = True,
+    )
