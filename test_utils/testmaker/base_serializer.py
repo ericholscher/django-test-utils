@@ -2,7 +2,6 @@ import cPickle as pickle
 import logging
 import time
 
-ser = logging.getLogger('testserializer')
 
 class Serializer(object):
     """A pluggable Serializer class"""
@@ -11,25 +10,29 @@ class Serializer(object):
 
     def __init__(self, name='default'):
         """Constructor"""
+        self.ser = logging.getLogger('testserializer')
         self.data = {}
         self.name = name
 
-    def save_request(self, request):
-        """Saves the Request to the serialization stream"""
+    def process_request(self, request):
         request_dict = {
             'name': self.name,
             'time': time.time(),
             'path': request.path,
-
             'get': request.GET,
             'post': request.POST,
             'arg_dict': request.REQUEST,
+            'method': request.method,
         }
-        ser.info(pickle.dumps(request_dict))
-        ser.info('---REQUEST_BREAK---')
+        return request_dict
 
-    def save_response(self, path, response):
-        """Saves the Response-like objects information that might be tested"""
+    def save_request(self, request):
+        """Saves the Request to the serialization stream"""
+        request_dict = self.process_request(request)
+        self.ser.info(pickle.dumps(request_dict))
+        self.ser.info('---REQUEST_BREAK---')
+
+    def process_response(self, path, response):
         response_dict = {
             'name': self.name,
             'time': time.time(),
@@ -41,9 +44,15 @@ class Serializer(object):
             'cookies': response.cookies,
             'headers': response._headers,
         }
+        return response_dict
+
+
+    def save_response(self, path, response):
+        """Saves the Response-like objects information that might be tested"""
+        response_dict = self.process_response(path, response)
         try:
-            ser.info(pickle.dumps(response_dict))
-            ser.info('---RESPONSE_BREAK---')
+            self.ser.info(pickle.dumps(response_dict))
+            self.ser.info('---RESPONSE_BREAK---')
         except (TypeError, pickle.PicklingError):
             #Can't pickle wsgi.error objects
             pass
