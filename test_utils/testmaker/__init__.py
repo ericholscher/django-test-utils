@@ -17,7 +17,7 @@ class Testmaker(TestCase):
 {% if create_fixtures %}
     fixtures = ["{{ fixture_file }}"]
 {% else %}
-    #fixtures = ["{{ app_name }}"]
+    #fixtures = ["{{ app_name }}_testmaker"]
 {% endif %}
 """
 

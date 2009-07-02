@@ -25,10 +25,14 @@ class Processer(object):
 
     def process_request(self, request):
         """Turn the request into a unittest"""
+        if 'media' in request.path:
+            return
         self.log_request(request)
 
     def process_response(self, request, response):
         """Turn the response into a unittest"""
+        if 'media' in request.path:
+            return
         self.log_status(request.path, response)
         if response.context and response.status_code != 404:
             user_context = self.get_user_context(response.context)
@@ -44,12 +48,12 @@ class Processer(object):
             for arg in dikt:
                 request_str += "'%s': '%s', " % (arg, request.REQUEST[arg])
         request_str += "}"
-        log.info("\t\tr = c.%s(%s)" % (method, request_str))
+        log.info("        r = c.%s(%s)" % (method, request_str))
 
     def log_status(self, path, request):
         log.info("\t\tself.assertEqual(r.status_code, %s)" % request.status_code)
         if request.status_code in [301, 302]:
-            log.info("\t\tself.assertEqual(r['Location'], %s)" % request['Location'])
+            log.info("        self.assertEqual(r['Location'], '%s')" % request['Location'])
 
     def get_user_context(self, context_list):
         #Ugly Hack. Needs to be a better way
@@ -71,6 +75,6 @@ class Processer(object):
             try:
                 #Avoid memory addy's which will change.
                 if not re.search("0x\w+", force_unicode(context[var])):
-                    log.info(u'''\t\tself.assertEqual(unicode(r.context[-1]["""%s"""]), u"""%s""")''' % (var, force_unicode(context[var])))
+                    log.info(u'''        self.assertEqual(unicode(r.context[-1]["""%s"""]), u"""%s""")''' % (var, force_unicode(context[var])))
             except UnicodeDecodeError, e:
                 pass
