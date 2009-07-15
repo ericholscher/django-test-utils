@@ -1,4 +1,5 @@
 from base import Plugin
+import re
 
 class URLConf(Plugin):
     """
