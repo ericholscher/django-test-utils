@@ -3,8 +3,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.admindocs.views import extract_views_from_urlpatterns
 
 from optparse import make_option
-from test_utils.crawler import Crawler
-from test_utils.patu import Patu
+from test_utils.crawler.base import Crawler
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -52,6 +51,5 @@ class Command(BaseCommand):
 
             #Now we have all of our URLs to test
 
-        #c = Crawler('/', conf_urls=conf_urls, verbosity=verbosity)
-        c = Patu('http://ericholscher.com', conf_urls=conf_urls, verbosity=verbosity)
+        c = Crawler('/', conf_urls=conf_urls, verbosity=verbosity)
         c.run()
