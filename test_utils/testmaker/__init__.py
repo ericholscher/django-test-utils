@@ -31,7 +31,7 @@ def make_fixtures(fixture_file, format, app):
         print ("Unable to serialize database: %s" % e)
 
 
-def setup_logging(test_file, serialize_file):
+def setup_logging(test_file='/tmp/testmaker_tests.py', serialize_file='/tmp/testmaker_serialized'):
     #supress other logging
     logging.basicConfig(level=logging.CRITICAL,
                         filename="/dev/null")

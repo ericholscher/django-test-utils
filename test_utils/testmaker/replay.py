@@ -28,7 +28,6 @@ for line in f.readlines():
         #process request
         to_pickle = ''.join(buffer)
         request = Request(serial_obj.loads(to_pickle))
-        import ipdb; ipdb.set_trace()
         processor.log_request(request)
         print request['path'], request['time']
         buffer = []

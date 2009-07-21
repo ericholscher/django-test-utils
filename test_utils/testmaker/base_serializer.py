@@ -2,7 +2,6 @@ import cPickle as pickle
 import logging
 import time
 
-
 class Serializer(object):
     """A pluggable Serializer class"""
 
@@ -10,18 +9,19 @@ class Serializer(object):
 
     def __init__(self, name='default'):
         """Constructor"""
+        self.name = name
+        #self.ser = logging.getLogger(name)
         self.ser = logging.getLogger('testserializer')
         self.data = {}
-        self.name = name
 
     def process_request(self, request):
         request_dict = {
             'name': self.name,
             'time': time.time(),
             'path': request.path,
-            'get': request.GET,
-            'post': request.POST,
-            'arg_dict': request.REQUEST,
+            'GET': request.GET,
+            'POST': request.POST,
+            'REQUEST': request.REQUEST,
             'method': request.method,
         }
         return request_dict
