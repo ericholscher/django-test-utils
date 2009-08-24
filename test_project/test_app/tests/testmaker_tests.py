@@ -5,7 +5,7 @@ from django.test.testcases import TestCase
 from django.template import Context, Template
 from django.contrib.auth.models import User
 from test_utils.crawler.base import Crawler
-from test_utils.testmaker import setup_logging
+from test_utils.testmaker import Testmaker
 from django.conf import settings
 import logging, os, sys, re
 
@@ -32,7 +32,8 @@ class TestMakerTests(TestCase):
     fixtures = ['polls_testmaker.json']
 
     def setUp(self):
-        setup_logging('test_file', 'serialize_file')
+        self.tm = Testmaker()
+        self.tm.setup_logging('test_file', 'serialize_file')
 
     def tearDown(self):
         #Teardown logging somehow?
