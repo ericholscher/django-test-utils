@@ -11,7 +11,6 @@ from django.test import TestCase
 from django.test import Client
 from django import template
 from django.db.models import get_model
-c = Client(REMOTE_ADDR="127.0.0.1")
 
 class Testmaker(TestCase):
 {% if create_fixtures %}
@@ -21,80 +20,101 @@ class Testmaker(TestCase):
 {% endif %}
 """
 
-def make_fixtures(fixture_file, format, app):
-    print "Creating fixture at " + fixture_file
-    objects, collected = _relational_dumpdata(app, set())
-    serial_file = open(fixture_file, 'a')
-    try:
-        serializers.serialize(format, objects, stream=serial_file, indent=4)
-    except Exception, e:
-        print ("Unable to serialize database: %s" % e)
+class TestMaker(object):
+
+    def __init__(self, app=None, verbosity=1, create_fixtures=False, format='xml', addrport='', **kwargs):
+        self.app = app
+        self.verbosity = verbosity
+        self.create_fixtures = create_fixtures
+        self.format = format
+        self.addrport = addrport
+        self.kwargs = kwargs
+        #Assume we're writing new tests until proven otherwise
+        self.new_tests = True
+
+    def perpare(self):
+        self.set_paths()
+        self.setup_logging()
+        self.prepare_test_file()
+        self.insert_middleware()
 
 
-def setup_logging(test_file='/tmp/testmaker_tests.py', serialize_file='/tmp/testmaker_serialized'):
-    #supress other logging
-    logging.basicConfig(level=logging.CRITICAL,
-                        filename="/dev/null")
+    def set_paths(self):
+        if self.app:
+            self.app_name = self.app.__name__.split('.')[-2]
+            self.base_dir = path.dirname(self.app.__file__)
+        else:
+            self.app_name = 'tmp'
+            #TODO: Need to make this platform independent.
+            self.base_dir = '/tmp/'
 
-    log = logging.getLogger('testmaker')
-    log.setLevel(logging.INFO)
-    handler = logging.FileHandler(test_file, 'a')
-    handler.setFormatter(logging.Formatter('%(message)s'))
-    log.addHandler(handler)
+        #Figure out where to store data
+        self.fixtures_dir = path.join(self.base_dir, 'fixtures')
+        self.fixture_file = path.join(self.fixtures_dir, '%s_testmaker.%s' % (self.app_name, self.format))
+        if self.create_fixtures:
+            if not path.exists(self.fixtures_dir):
+                os.mkdir(self.fixtures_dir)
 
-    log_s = logging.getLogger('testserializer')
-    log_s.setLevel(logging.INFO)
-    handler_s = logging.FileHandler(serialize_file, 'a')
-    handler_s.setFormatter(logging.Formatter('%(message)s'))
-    log_s.addHandler(handler_s)
+        #Setup test and serializer files
+        self.tests_dir = path.join(self.base_dir, 'tests')
+        self.test_file = path.join(self.tests_dir, '%s_testmaker.py' % (self.app_name))
+        #TODO: Make this have the correct file extension based on serializer used
+        self.serialize_file = path.join(self.tests_dir, '%s_testdata.serialized' % (self.app_name))
 
-    return (log, log_s)
+        if not path.exists(self.tests_dir):
+            os.mkdir(self.tests_dir)
+        if path.exists(self.test_file):
+            self.new_tests = False
 
+        if self.verbosity > 0:
+            print "Handling app '%s'" % self.app_name
+            print "Logging tests to %s" % self.test_file
+            if self.create_fixtures:
+                print "Logging fixtures to %s" % self.fixture_file
 
-def setup_testmaker(app, verbosity=1, create_fixtures=False, format='xml', addrport='', **kwargs):
-    """
-    Sets up the testmaker working directory and files/settings.
-    """
+    def setup_logging(self):
+        #supress other logging
+        logging.basicConfig(level=logging.CRITICAL,
+                            filename="/dev/null")
 
-    app_name = app.__name__.split('.')[-2]
-    base_dir = path.dirname(app.__file__)
-    #Assume we're writing new tests until proven otherwise
-    new_tests = True
+        log = logging.getLogger('testmaker')
+        log.setLevel(logging.INFO)
+        handler = logging.FileHandler(self.test_file, 'a')
+        handler.setFormatter(logging.Formatter('%(message)s'))
+        log.addHandler(handler)
+        self.log = log
 
-    #Figure out where to store data
-    fixtures_dir = path.join(base_dir, 'fixtures')
-    fixture_file = path.join(fixtures_dir, '%s_testmaker.%s' % (app_name, format))
-    if create_fixtures:
-        if not path.exists(fixtures_dir):
-            os.mkdir(fixtures_dir)
+        log_s = logging.getLogger('testserializer')
+        log_s.setLevel(logging.INFO)
+        handler_s = logging.FileHandler(self.serialize_file, 'a')
+        handler_s.setFormatter(logging.Formatter('%(message)s'))
+        log_s.addHandler(handler_s)
+        self.serializer = log_s
 
-    #Setup test and serializer files
-    tests_dir = path.join(base_dir, 'tests')
-    test_file = path.join(tests_dir, '%s_testmaker.py' % (app_name))
-    serialize_file = path.join(tests_dir, '%s_testdata.pickle' % (app_name))
+    def prepare_test_file(self):
+        if self.new_tests:
+            t = Template(TESTMAKER_TEMPLATE)
+            c = Context({
+                'create_fixtures': self.create_fixtures,
+                'app_name': self.app_name,
+                'fixture_file': self.fixture_file,
+            })
+            self.log.info(t.render(c))
+        else:
+            if self.verbosity > 0:
+                print "Appending to current log file"
 
-    if not path.exists(tests_dir):
-        os.mkdir(tests_dir)
-    if path.exists(test_file):
-        new_tests = False
+    def insert_middleware(self):
+        if self.verbosity > 0:
+            print "Inserting TestMaker logging server..."
+        settings.MIDDLEWARE_CLASSES += ('test_utils.testmaker.middleware.testmaker.TestMakerMiddleware',)
 
-    if verbosity > 0:
-        print "Handling app '%s'" % app_name
-        print "Logging tests to %s" % test_file
-        if create_fixtures:
-            print "Logging fixtures to %s" % fixture_file
-
-    log, log_s = setup_logging(test_file=test_file, serialize_file=serialize_file)
-
-    if new_tests:
-        t = Template(TESTMAKER_TEMPLATE)
-        c = Context(locals())
-        log.info(t.render(c))
-    else:
-        print "Appending to current log file"
-
-    if verbosity > 0:
-        print "Inserting TestMaker logging server..."
-    settings.MIDDLEWARE_CLASSES += ('test_utils.testmaker.middleware.testmaker.TestMakerMiddleware',)
-
-    return (fixture_file, test_file)
+    def make_fixtures(self):
+        if self.verbosity > 0:
+            print "Creating fixture at " + self.fixture_file
+        objects, collected = _relational_dumpdata(self.app, set())
+        serial_file = open(self.fixture_file, 'a')
+        try:
+            serializers.serialize(self.format, objects, stream=serial_file, indent=4)
+        except Exception, e:
+            print ("Unable to serialize database: %s" % e)

@@ -6,7 +6,7 @@ from django.core.management.base import AppCommand, CommandError
 from django.conf import settings
 from django.core.management import call_command
 
-from test_utils.testmaker import setup_testmaker, make_fixtures
+from test_utils.testmaker import Testmaker
 
 class Command(AppCommand):
     option_list = AppCommand.option_list + (
@@ -27,12 +27,11 @@ class Command(AppCommand):
         format = options.get('format', 'xml')
         addrport = options.get('addrport', '')
 
-        fixture_file, test_file = setup_testmaker(app, verbosity, create_fixtures, format, addrport)
+        testmaker = Testmaker(app, verbosity, create_fixtures, format, addrport)
         try:
             call_command('runserver', addrport=addrport, use_reloader=False)
         except SystemExit:
             if create_fixtures:
-                make_fixtures(fixture_file, format, app)
+                testmaker.make_fixtures()
             else:
                 raise
-
