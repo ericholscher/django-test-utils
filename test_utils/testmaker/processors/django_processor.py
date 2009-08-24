@@ -2,34 +2,39 @@ import cPickle as pickle
 import logging
 import time
 import re
-from base import slugify
+import base
 
 from django.template import Template, Context
 from django.utils.encoding import force_unicode
 
 TEST_TEMPLATE = """
+{% autoescape off %}
     def test_{{path}}_{{time}}(self):
         r = c.{{method}}({{request_str}})
-
+{% endautoescape %}
 """
 
 STATUS_TEMPLATE = """
+{% autoescape off %}
         self.assertEqual(r.status_code, {{status_code}})
-        {% ifequal status_code 301 %}
+        {% if status_code %}
             self.assertEqual(r['Location'], '{{location}}')
-        {% endifequal %}
+        {% endif %}
+{% endautoescape %}
 """
 
 CONTEXT_TEMPLATE = '''
+{% autoescape off %}
         self.assertEqual(unicode(r.context[-1]['{{key}}']), u"""{{value}}""")
+{% endautoescape %}
 '''
 
 
-class DjangoProcesser(object):
+class Processor(base.Processer):
     """Processes the serialized data. Generally to create some sort of test cases"""
 
     def __init__(self, name='django'):
-        super(DjangoProcesser, self).__init__(name)
+        super(Processor, self).__init__(name)
 
     def save_request(self, request):
         """ Actually write the request out to a file """
@@ -38,9 +43,9 @@ class DjangoProcesser(object):
 
     def save_response(self, request, response):
         if self.shall_we_proceed(request):
-            self._log_status(request)
+            self._log_status(response)
             if response.context and response.status_code != 404:
-                context = self.get_context(response.context)
+                context = self._get_context(response.context)
                 self._log_context(context)
                 #This is where template tag outputting would go
 
@@ -54,20 +59,21 @@ class DjangoProcesser(object):
 
         template = Template(TEST_TEMPLATE)
         context = Context({
-            'path': slugify(request.path),
-            'time': slugify(time.time()),
+            'path': base.slugify(request.path),
+            'time': base.slugify(time.time()),
             'method': method,
             'request_str': request_str,
         })
         self.log.info(template.render(context))
 
-    def _log_status(self, request):
+    def _log_status(self, response):
         template = Template(STATUS_TEMPLATE)
-        context = Context({
-            'status_code': request.status_code,
-            'location': request['Location']
-        })
-        self.log.info(template.render(context))
+        context = {
+            'status_code': response.status_code,
+        }
+        if response.status_code in [301, 302]:
+            context['location'] = response['Location']
+        self.log.info(template.render(Context(context)))
 
     def _get_context(self, context_list):
         #Ugly Hack. Needs to be a better way
@@ -88,13 +94,13 @@ class DjangoProcesser(object):
         template = Template(CONTEXT_TEMPLATE)
         for var in context:
             val = force_unicode(context[var])
-            context = Context({
+            con = Context({
                 'key': var,
                 'value': val,
             })
             try:
                 #Avoid memory addy's which will change.
                 if not re.search("0x\w+", val):
-                    self.log.info(template.render(context))
+                    self.log.info(template.render(con))
             except UnicodeDecodeError, e:
                 pass

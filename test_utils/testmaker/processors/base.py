@@ -1,5 +1,6 @@
 from django.template.defaultfilters import slugify as base_slugify
 import logging
+import re
 
 def slugify(toslug):
     """
@@ -12,7 +13,8 @@ class Processer(object):
 
     def __init__(self, name):
         self.name = name
-        self.log = logging.getLogger('testprocessor-%s' % self.name)
+        self.log = logging.getLogger('testprocessor')
+        #self.log = logging.getLogger('testprocessor-%s' % self.name)
         self.data = {}
 
     def shall_we_proceed(self, request):

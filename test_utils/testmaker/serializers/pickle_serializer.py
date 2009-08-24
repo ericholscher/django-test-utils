@@ -1,10 +1,11 @@
-from base_serializer import Serializer
+import base
 import cPickle as pickle
 from test_utils.testmaker.serializers import REQUEST_UNIQUE_STRING, RESPONSE_UNIQUE_STRING
 
-class PickleSerializer(Serializer):
+class Serializer(base.Serializer):
 
-    name = "pickle"
+    def __init__(self, name='pickle'):
+        super(Serializer, self).__init__(name)
 
     def save_request(self, request):
         """Saves the Request to the serialization stream"""

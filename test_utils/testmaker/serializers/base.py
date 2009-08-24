@@ -9,7 +9,8 @@ class Serializer(object):
     def __init__(self, name):
         """Constructor"""
         self.name = name
-        self.ser = logging.getLogger('testserializer-%s' % self.name)
+        self.ser = logging.getLogger('testserializer')
+        #self.ser = logging.getLogger('testserializer-%s' % self.name)
         self.data = {}
 
     def process_request(self, request):
