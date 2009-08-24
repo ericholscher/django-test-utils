@@ -20,8 +20,8 @@ class TestMakerMiddleware(object):
         Serializers will be pluggable and allow for custom recording.
         Processers will process the serializations into test formats.
         """
-        self.serializer = serializers.get_serializer('pickle')
-        self.processer = processors.get_processor('django')
+        self.serializer = serializers.get_serializer('pickle')()
+        self.processor = processors.get_processor('django')()
 
     def process_request(self, request):
         """
@@ -32,7 +32,7 @@ class TestMakerMiddleware(object):
         #This is request.REQUEST to catch POST and GET
         if 'test_client_true' not in request.REQUEST:
             self.serializer.save_request(request)
-            self.processer.save_request(request)
+            self.processor.save_request(request)
             #We only want to re-run the request on idempotent requests
             if request.method.lower() == "get":
                 setup_test_environment()
@@ -41,4 +41,4 @@ class TestMakerMiddleware(object):
                 getdict['test_client_true'] = 'yes' #avoid recursion
                 response = c.get(request.path, getdict)
                 self.serializer.save_response(request, response)
-                self.processer.save_response(request, response)
+                self.processor.save_response(request, response)

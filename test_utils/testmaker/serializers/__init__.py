@@ -5,7 +5,7 @@ Interfaces for serializing Django requests.
 To add your own serializers, use the TEST_SERIALIZATION_MODULES setting::
 
     TEST_SERIALIZATION_MODULES = {
-        'base': 'test_utils.testmaker.base_serializer',
+        'pickle': 'test_utils.testmaker.serializers.pickle_serializer',
         'json': 'test_utils.testmaker.json_serializer',
     }
 
@@ -16,8 +16,8 @@ from django.utils import importlib
 
 # Built-in serialize
 TEST_SERIALIZERS = {
-    'base': 'test_utils.testmaker.serializers.base',
-    'json': 'test_utils.testmaker.serializers.json',
+    'pickle': 'test_utils.testmaker.serializers.pickle_serializer',
+    'json': 'test_utils.testmaker.serializers.json_serializer',
 }
 
 REQUEST_UNIQUE_STRING = '---REQUEST_BREAK---'
@@ -57,6 +57,11 @@ def get_serializer_formats():
     if not _test_serializers:
         _load_test_serializers()
     return _test_serializers.keys()
+
+def get_deserializer(format):
+    if not _test_serializers:
+        _load_test_serializers()
+    return _test_serializers[format].Deserializer
 
 def _load_test_serializers():
     """

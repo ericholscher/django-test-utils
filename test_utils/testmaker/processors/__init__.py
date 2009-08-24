@@ -17,7 +17,7 @@ from django.utils import importlib
 # Built-in processors
 
 TEST_PROCESSORS = {
-    'django': 'test_utils.testmaker.processors.django',
+    'django': 'test_utils.testmaker.processors.django_processor',
     #'twill': 'test_utils.testmaker.processors.twill',
 }
 
@@ -49,7 +49,7 @@ def unregister_processor(format):
 def get_processor(format):
     if not _test_processors:
         _load_test_processors()
-    return _test_processors[format].Serializer
+    return _test_processors[format].Processor
 
 def get_processor_formats():
     if not _test_processors:
