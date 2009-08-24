@@ -34,7 +34,9 @@ class Testmaker(object):
 
     def perpare(self):
         self.set_paths()
-        self.setup_logging()
+        if not hasattr(self, 'fixture_file'):
+            #If we ran this manually, don't do it again
+            self.setup_logging()
         self.prepare_test_file()
         self.insert_middleware()
 

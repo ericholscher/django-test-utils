@@ -41,7 +41,7 @@ class TestMakerTests(TestCase):
         os.remove('serialize_file')
 
     def test_basic_testmaker(self):
-        settings.MIDDLEWARE_CLASSES += ('test_utils.testmaker.middleware.testmaker.TestMakerMiddleware',)
+        self.tm.insert_middleware()
         self.client.get('/')
         logs = open('test_file')
         output = logs.read()

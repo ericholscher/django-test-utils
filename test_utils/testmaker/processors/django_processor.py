@@ -1,5 +1,3 @@
-import cPickle as pickle
-import logging
 import time
 import re
 import base
