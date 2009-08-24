@@ -1,7 +1,7 @@
 import logging
 import os
 from os import path
-from django.core import serializers
+from django.core import serializers as django_serializers
 from test_utils.management.commands.relational_dumpdata import _relational_dumpdata
 from django.template import Context, Template
 from django.conf import settings
@@ -20,7 +20,7 @@ class Testmaker(TestCase):
 {% endif %}
 """
 
-class TestMaker(object):
+class Testmaker(object):
 
     def __init__(self, app=None, verbosity=1, create_fixtures=False, format='xml', addrport='', **kwargs):
         self.app = app
@@ -72,18 +72,26 @@ class TestMaker(object):
             if self.create_fixtures:
                 print "Logging fixtures to %s" % self.fixture_file
 
-    def setup_logging(self):
+    def setup_logging(self, test_file=None, serialize_file=None):
         #supress other logging
         logging.basicConfig(level=logging.CRITICAL,
                             filename="/dev/null")
 
-        log = logging.getLogger('testmaker')
+        if not test_file:
+            test_file = self.test_file
+        else:
+            self.test_file = test_file
+        log = logging.getLogger('testprocessor')
         log.setLevel(logging.INFO)
-        handler = logging.FileHandler(self.test_file, 'a')
+        handler = logging.FileHandler(test_file, 'a')
         handler.setFormatter(logging.Formatter('%(message)s'))
         log.addHandler(handler)
         self.log = log
 
+        if not serialize_file:
+            serialize_file = self.serialize_file
+        else:
+            self.serialize_file = serialize_file
         log_s = logging.getLogger('testserializer')
         log_s.setLevel(logging.INFO)
         handler_s = logging.FileHandler(self.serialize_file, 'a')
@@ -115,6 +123,6 @@ class TestMaker(object):
         objects, collected = _relational_dumpdata(self.app, set())
         serial_file = open(self.fixture_file, 'a')
         try:
-            serializers.serialize(self.format, objects, stream=serial_file, indent=4)
+            django_serializers.serialize(self.format, objects, stream=serial_file, indent=4)
         except Exception, e:
             print ("Unable to serialize database: %s" % e)
