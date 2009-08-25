@@ -27,6 +27,7 @@ Contents
    twill_runner
    keep_database_runner
    mocks
+   settings
 
 Indices and tables
 ==================

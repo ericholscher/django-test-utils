@@ -1,10 +1,11 @@
 .. _testmaker:
 
+================
 Django Testmaker
-----------------
+================
 
 Source code
-~~~~~~~~~~~
+===========
 
 This projects is now a part of `Django test utils </projects/django-
 test-utils/>`__. The 0.2 release is available at `Pypi
@@ -12,7 +13,7 @@ test-utils/>`__. The 0.2 release is available at `Pypi
 
 
 What is does
-~~~~~~~~~~~~
+============
 
 Django testmaker is an application that writes tests for your Django
 views for you. You simply run a special development server, and it
@@ -22,7 +23,7 @@ each view that you hit.
 
 
 Usage
-~~~~~
+=====
 
 Step 1: Add `test_utils` to your INSTALLED_APPS settings.
 
@@ -65,39 +66,35 @@ Step 3:
 
     ./manage.py test APP
 
-Things to notice
-~~~~~~~~~~~~~~~~
+Testmaker Internal Basics
+=========================
 
-This fixes a lot of complaints that people had about previous versions
-of test maker. This allows you to test apps that are anywhere on your
-Python Path (and in your INSTALLED_APPS), which makes life a lot
-easier. Each view also has it's own test name, which is a slugified
-version of the request path and the time when you hit it (because I
-needed something unique :)) You also may notice that there is
-rudimentary support for template tags; this will be explained upon in
-my `next post <http://ericholscher.com/blog/2008/nov/27/value-
-conventions/>`__. However, for now know that it only works for
-template tags that don't set a context variable, or use the format `as` to set one.
+Testmaker now has a pluggable backend architecture. It includes the concept of a `Processor` and a `Serializer`. A `Serializer` is responsible for serializing your request and responses, so that they can be run again later. A `Processor` is response for taking these request and response objects and turning them into the actual Unit Tests.
 
+API
+---
 
-Improvements over 0.1
-~~~~~~~~~~~~~~~~~~~~~
+Both processors and serializers follow the standard API direction that django serializers started. For example, to grab instances of both of them, use the following code::
 
+    serializer = serializers.get_serializer('pickle')()
+    processor = processors.get_processor('django')()
 
-+ Each page request is in its own test, for easier debugging
-+ It will append tests if your APP_testmaker.py file already exists.
-+ You can now test admin views
-+ POST support is improved
-+ The code is cleaner and more readable
-+ Git!
+Serializers
+-----------
 
+Testmaker ships with 2 default serializers currently. They are the `json` and `pickle` backends.
+
+Processors
+----------
+
+Testmaker currently ships with just one Processor, the `django` processor, which produces Django Testcase-style Unit Tests.
 
 Options
-~~~~~~~
+=======
 
 
 -f --fixture
-````````````
+------------
 
 If you pass the `-f` option to testmaker, it will create fixtures for
 you. They will be saved in `APP/fixtures/APP_fixtures.FORMAT`. The
@@ -105,25 +102,24 @@ default format is XML because I was having problems with JSON.
 
 
 --format
-````````
+--------
 
 Pass this in with a valid serialization format for Django. Options are
 currently json, yaml, or xml.
 
 
 --addrport
-``````````
+----------
 
 This allows you to pass in the normal address and post options for
 runserver.
 
 
 Future improvements
-~~~~~~~~~~~~~~~~~~~
-
+===================
 
 Force app filtering
-```````````````````
+-------------------
 
 I plan on having an option that allows you to restrict the views to
 the app that you passed in on the command line. This would inspect the
@@ -133,15 +129,8 @@ only test views in the app.
 
 
 Better test naming scheme
-`````````````````````````
+-------------------------
 
 The current way of naming tests is a bit hackish, and could be
 improved. It works for now, and keeps names unique, so it's achieving
 that goal. Suggestions welcome for a better way to name things.
-
-
-Improve template tag testmaker
-``````````````````````````````
-
-It is a total hack at current, but it works. Certainly a first, rough
-draft.
