@@ -58,6 +58,7 @@ def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
         settings.DATABASE_NAME = settings.TEST_DATABASE_NAME
     else:
         settings.DATABASE_NAME = creation.TEST_DATABASE_PREFIX + settings.DATABASE_NAME
+    connection.settings_dict["DATABASE_NAME"] = settings.DATABASE_NAME
 
     # does test db exist already ?
     try:
@@ -66,16 +67,18 @@ def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
         # db does not exist
         # juggling !  create_test_db switches the DATABASE_NAME to the TEST_DATABASE_NAME
         settings.DATABASE_NAME = old_name
+        connection.settings_dict["DATABASE_NAME"] = old_name
         connection.creation.create_test_db(verbosity, autoclobber=True)
     else:
         connection.close()
 
     settings.DATABASE_SUPPORTS_TRANSACTIONS = connection.creation._rollback_works()
-   
+
     result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
 
     #Since we don't call destory_test_db, we need to set the db name back.
     settings.DATABASE_NAME = old_name
+    connection.settings_dict["DATABASE_NAME"] = old_name
     teardown_test_environment()
 
     return len(result.failures) + len(result.errors)
