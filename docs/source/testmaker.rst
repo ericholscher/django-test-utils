@@ -89,6 +89,20 @@ Processors
 
 Testmaker currently ships with just one Processor, the `django` processor, which produces Django Testcase-style Unit Tests.
 
+Extending Testmaker
+===================
+
+Adding a new backend for a Processor or Serializer is easy. They both provide a similar interface, which can be located in the base.py file in their respective directories.
+
+The only two functions that are required for each backend are the ability to save a request and a response. They have obvious defitions, and you should look in their directory for examples.
+
+save_request(self, request)
+---------------------------
+
+save_response(self, request, response)
+--------------------------------------
+
+
 Options
 =======
 
