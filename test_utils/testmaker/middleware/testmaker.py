@@ -13,6 +13,9 @@ if not debug:
 else:
     print "Loaded Testmaker Middleware"
 
+serializer_pref = getattr(settings, 'TESTMAKER_SERIALIZER', 'pickle')
+processor_pref = getattr(settings, 'TESTMAKER_PROCESSOR', 'django')
+
 class TestMakerMiddleware(object):
     def __init__(self):
         """
@@ -20,8 +23,8 @@ class TestMakerMiddleware(object):
         Serializers will be pluggable and allow for custom recording.
         Processers will process the serializations into test formats.
         """
-        self.serializer = serializers.get_serializer('pickle')()
-        self.processor = processors.get_processor('django')()
+        self.serializer = serializers.get_serializer(serializer_pref)()
+        self.processor = processors.get_processor(processor_pref)()
 
     def process_request(self, request):
         """

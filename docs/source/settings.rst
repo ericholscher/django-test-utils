@@ -11,6 +11,16 @@ This page contains the available settings for test utils. Broken down by the app
 Testmaker
 =========
 
+TESTMAKER_SERIALIZER
+--------------------
+
+This is the serializer that Testmaker should use. By default it is `pickle`.
+
+TESTMAKER_PROCESSOR
+-------------------
+
+This is the processor that Testmaker should use. By default it is `django`.
+
 TEST_PROCESSOR_MODULES
 ----------------------
 
