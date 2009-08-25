@@ -28,6 +28,7 @@ Contents
    keep_database_runner
    mocks
    settings
+   running_tests
 
 Indices and tables
 ==================
