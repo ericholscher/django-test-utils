@@ -14,12 +14,13 @@ The code for Django-test-utils is available at `Github
 
 If you have any questions, please contact `Eric Holscher <http://ericholscher.com>`_ at eric@ericholscher.com
 
+There is a `Bug Tracker <http://github.com/ericholscher/django-test-utils/issues>`_ at Github as well, if you find any defects with the code. Pull requests and patches are better than filing a bug.
+
 Contents
 --------
 
 .. toctree::
    :maxdepth: 2
-   :glob:
 
    testmaker
    crawler
@@ -34,5 +35,4 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
