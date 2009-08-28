@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.test import Client
 from django.test.utils import setup_test_environment
+from django.template import Template, Context
 
 from test_utils.testmaker import processors
 from test_utils.testmaker import serializers
@@ -23,6 +24,18 @@ if not Testmaker.enabled:
 
 serializer_pref = getattr(settings, 'TESTMAKER_SERIALIZER', 'pickle')
 processor_pref = getattr(settings, 'TESTMAKER_PROCESSOR', 'django')
+
+RESPONSE_TEMPLATE = Template("""
+<div class="wrapper" style="background-color: red; padding: 5px; color: #fff; width: 100%;">
+Testmaker: Logging to: {{ file }}
+<form action="/test_utils/set_logging/">
+    <input type="text" name="filename">
+    <input type="submit" value="New Test">
+</form>
+<a href="/test_utils/show_log/">Show Log</a>
+</div>
+""")
+
 
 class TestMakerMiddleware(object):
     def __init__(self):
@@ -54,3 +67,10 @@ class TestMakerMiddleware(object):
                 response = c.get(request.path, getdict)
                 self.serializer.save_response(request, response)
                 self.processor.save_response(request, response)
+
+    def process_response(self, request, response):
+        c = Context({'file': Testmaker.logfile()})
+        s = RESPONSE_TEMPLATE.render(c)
+        response.content = str(s) + str(response.content)
+        return response
+
