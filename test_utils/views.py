@@ -1,10 +1,14 @@
 from django.http import HttpResponse
+
 import logging
+
+from test_utils.testmaker.processors.base import slugify
 from test_utils.testmaker import Testmaker
 
 def set_logging(request, filename=None):
     if not filename:
         filename = request.REQUEST['filename']
+    filename = slugify(filename)
     log_file = '/tmp/testmaker/tests/%s_tests_custom.py' % filename
     serialize_file = '/tmp/testmaker/tests/%s_serial_custm.py' % filename
     tm = Testmaker()
