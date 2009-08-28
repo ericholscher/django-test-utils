@@ -5,6 +5,8 @@ import base
 from django.template import Template, Context
 from django.utils.encoding import force_unicode
 from django.utils.safestring import mark_safe
+from test_utils.templatetags import TemplateParser
+
 
 TEST_TEMPLATE = """    def test_{{path}}_{{time}}(self):
         r = c.{{method}}({{request_str}})"""
@@ -37,6 +39,10 @@ class Processor(base.Processer):
                 context = self._get_context(response.context)
                 self._log_context(context)
                 #This is where template tag outputting would go
+                parser = TemplateParser(response.template[0], context)
+                parser.parse()
+                parser.create_tests()
+
 
     def _log_request(self, request):
         method = request.method.lower()

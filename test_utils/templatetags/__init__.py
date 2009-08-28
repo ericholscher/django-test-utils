@@ -7,7 +7,7 @@ from django import template
 from test_utils.testmaker import Testmaker
 
 DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
-'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
+'extends' , 'filter' , 'firstof' , 'if' , 'else', 'for', #No for so we can do loops
 'ifchanged' , 'ifequal' , 'ifnotequal' , 'include' , 'load' , 'now' ,
 'regroup' , 'spaceless' , 'ssi' , 'templatetag' , 'url' , 'widthratio' ,
 'with' ]
@@ -33,7 +33,7 @@ class TemplateParser(object):
         self.tests = []
         #Accept both template names and template strings
         try:
-            self.template_string, self.filepath = load_template_source(template)
+            self.template_string, self.filepath = load_template_source(template.name)
         except:
             self.template_string = template
             self.filepath = None
@@ -85,27 +85,36 @@ class TemplateParser(object):
                 if bit == 'as':
                     context_name = bits[bit_num+1]
 
-            con_string = "{{ %s }}" % context_name
+            if context_name:
+                con_string = "{{ %s }}" % context_name
+            else:
+                con_string = ""
             template_string = "%s%s%s" % (''.join(self.loaded_classes), tag_string, con_string)
             try:
                 template_obj = template.Template(template_string)
                 rendered_string = template_obj.render(template.Context(out_context))
             except Exception, e:
                 print "EXCEPTION: %s" % e.message
+                rendered_string = ''
             #self.tests.append(rendered_string)
             self.output_ttag(template_string, rendered_string, out_context)
 
     def output_ttag(self, template_str, output_str, context):
-        Testmaker.log.info('''        tmpl = template.Template(u"""%s""")''' % template_str)
+        Testmaker.log.info("        tmpl = template.Template(u'%s')" % template_str)
         context_str = "{"
         for con in context:
             try:
                 tmpl_obj = context[con]
+                #TODO: This will blow up on anything but a model.
+                #Would be cool to have a per-type serialization, prior art is
+                #in django's serializers and piston.
                 context_str += "'%s': get_model('%s', '%s').objects.get(pk=%s)," % (con, tmpl_obj._meta.app_label, tmpl_obj._meta.module_name, tmpl_obj.pk )
             except:
                 #sometimes there be integers here
                 pass
         context_str += "}"
 
-        Testmaker.log.info('''        context = template.Context(%s)''' % context_str)
-        Testmaker.log.info('''        self.assertEqual(tmpl.render(context), u"""%s""")''' % output_str)
+        #if output_str:
+        #   Testmaker.log.info("        tmpl = template.Template(u'%s')" % template_str)
+        Testmaker.log.info("        context = template.Context(%s)" % context_str)
+        Testmaker.log.info("        self.assertEqual(tmpl.render(context), u'%s')\n" % output_str)
