@@ -18,7 +18,7 @@ from django.utils import importlib
 
 TEST_PROCESSORS = {
     'django': 'test_utils.testmaker.processors.django_processor',
-    #'twill': 'test_utils.testmaker.processors.twill',
+    'twill': 'test_utils.testmaker.processors.twill_processor',
 }
 
 _test_processors = {}
