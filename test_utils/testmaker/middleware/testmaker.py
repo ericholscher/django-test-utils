@@ -4,14 +4,22 @@ from django.test.utils import setup_test_environment
 
 from test_utils.testmaker import processors
 from test_utils.testmaker import serializers
+from test_utils.testmaker import Testmaker
 
 #Remove at your own peril.
 #Thar be sharks in these waters.
 debug = getattr(settings, 'DEBUG', False)
+"""
 if not debug:
     print "THIS CODE IS NOT MEANT FOR USE IN PRODUCTION"
 else:
     print "Loaded Testmaker Middleware"
+"""
+
+if not Testmaker.enabled:
+    testmaker = Testmaker(verbosity=0)
+    testmaker.prepare()
+
 
 serializer_pref = getattr(settings, 'TESTMAKER_SERIALIZER', 'pickle')
 processor_pref = getattr(settings, 'TESTMAKER_PROCESSOR', 'django')
@@ -34,6 +42,7 @@ class TestMakerMiddleware(object):
         """
         #This is request.REQUEST to catch POST and GET
         if 'test_client_true' not in request.REQUEST:
+            request.logfile = Testmaker.logfile()
             self.serializer.save_request(request)
             self.processor.save_request(request)
             #We only want to re-run the request on idempotent requests
