@@ -4,29 +4,20 @@ import base
 
 from django.template import Template, Context
 from django.utils.encoding import force_unicode
+from django.utils.safestring import mark_safe
 
-TEST_TEMPLATE = """
-{% autoescape off %}
-    def test_{{path}}_{{time}}(self):
-        r = c.{{method}}({{request_str}})
-{% endautoescape %}
-"""
+TEST_TEMPLATE = """    def test_{{path}}_{{time}}(self):
+        r = c.{{method}}({{request_str}})"""
 
-STATUS_TEMPLATE = """
-{% autoescape off %}
-        self.assertEqual(r.status_code, {{status_code}})
-        {% if status_code %}
-            self.assertEqual(r['Location'], '{{location}}')
-        {% endif %}
-{% endautoescape %}
-"""
+STATUS_TEMPLATE = """        self.assertEqual(r.status_code, {{status_code}})"""
 
-CONTEXT_TEMPLATE = '''
-{% autoescape off %}
-        self.assertEqual(unicode(r.context[-1]['{{key}}']), u"""{{value}}""")
-{% endautoescape %}
-'''
+CONTEXT_TEMPLATE = """        self.assertEqual(unicode(r.context[-1]['{{key}}']), u'{{value}}')"""
 
+def safe_dict(dict):
+    new_dic = {}
+    for key,val in dict.iteritems():
+        new_dic[key] = mark_safe(val)
+    return new_dic
 
 class Processor(base.Processer):
     """Processes the serialized data. Generally to create some sort of test cases"""
@@ -56,12 +47,13 @@ class Processor(base.Processer):
         request_str += "}"
 
         template = Template(TEST_TEMPLATE)
-        context = Context({
+        context = {
             'path': base.slugify(request.path),
             'time': base.slugify(time.time()),
             'method': method,
             'request_str': request_str,
-        })
+        }
+        context = Context(safe_dict(context))
         self.log.info(template.render(context))
 
     def _log_status(self, response):
@@ -71,7 +63,8 @@ class Processor(base.Processer):
         }
         if response.status_code in [301, 302]:
             context['location'] = response['Location']
-        self.log.info(template.render(Context(context)))
+        context = Context(safe_dict(context))
+        self.log.info(template.render(context))
 
     def _get_context(self, context_list):
         #Ugly Hack. Needs to be a better way
@@ -92,10 +85,11 @@ class Processor(base.Processer):
         template = Template(CONTEXT_TEMPLATE)
         for var in context:
             val = force_unicode(context[var])
-            con = Context({
+            con = {
                 'key': var,
                 'value': val,
-            })
+            }
+            con = Context(safe_dict(con))
             try:
                 #Avoid memory addy's which will change.
                 if not re.search("0x\w+", val):
