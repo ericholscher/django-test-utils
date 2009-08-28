@@ -4,6 +4,8 @@ from django.conf import settings
 from django.template.loaders.filesystem import load_template_source
 from django import template
 
+from test_utils.testmaker import Testmaker
+
 DEFAULT_TAGS = ['autoescape' , 'block' , 'comment' , 'cycle' , 'debug' ,
 'extends' , 'filter' , 'firstof' , 'for' , 'if' , 'else',
 'ifchanged' , 'ifequal' , 'ifnotequal' , 'include' , 'load' , 'now' ,
@@ -44,6 +46,10 @@ class TemplateParser(object):
         Thus we have to loop over the file, splitting on the regex, then
         looping over the split, matching for our regex again.
         Improvements welcome!
+
+        End result::
+            self.loaded_classes contains the load commands of classes loaded
+            self.template_calls contains the template calls
         """
         for line in self.template_string.split('\n'):
             split_line = tag_re.split(line)
@@ -52,7 +58,7 @@ class TemplateParser(object):
                     mat = tag_re.search(matched)
                     if mat:
                         full_command = mat.group(0)
-                        cmd =  mat.group(2).split()[0].strip() #tokens
+                        cmd =  mat.group(2).split()[0].strip() #get_comment_form etc
                         if cmd == 'load':
                             self.loaded_classes.append(full_command)
                         else:
@@ -66,30 +72,31 @@ class TemplateParser(object):
         the outputted template.
         """
         for tag_string in self.template_calls:
-                #Try and find anything in the string that's in the context
-                context_name = ''
-                bits = tag_string.split()
-                for bit_num, bit in enumerate(bits):
-                    try:
-                        out_context[bit] = template.Variable(bit).resolve(self.context)
-                    except:
-                        pass
-                    if bit == 'as':
-                        context_name = bits[bit_num+1]
-
-                con_string = "{{ %s }}" % context_name
-                template_string = "%s%s%s" % (''.join(self.loaded_classes), tag_string, con_string)
-                import ipdb; ipdb.set_trace()
+            out_context = {}
+            context_name = ""
+            #Try and find anything in the string that's in the context
+            context_name = ''
+            bits = tag_string.split()
+            for bit_num, bit in enumerate(bits):
                 try:
-                    template_obj = template.Template(template_string)
-                    rendered_string = template_obj.render(template.Context(out_context))
-                except Exception, e:
-                    print "EXCEPTION: %s" % e.message
-                #self.tests.append(rendered_string)
-                self.output_ttag(template_string, rendered_string, out_context)
+                    out_context[bit] = template.Variable(bit).resolve(self.context)
+                except:
+                    pass
+                if bit == 'as':
+                    context_name = bits[bit_num+1]
+
+            con_string = "{{ %s }}" % context_name
+            template_string = "%s%s%s" % (''.join(self.loaded_classes), tag_string, con_string)
+            try:
+                template_obj = template.Template(template_string)
+                rendered_string = template_obj.render(template.Context(out_context))
+            except Exception, e:
+                print "EXCEPTION: %s" % e.message
+            #self.tests.append(rendered_string)
+            self.output_ttag(template_string, rendered_string, out_context)
 
     def output_ttag(self, template_str, output_str, context):
-        log.info('''\t\ttmpl = template.Template(u"""%s""")''' % template_str)
+        Testmaker.log.info('''        tmpl = template.Template(u"""%s""")''' % template_str)
         context_str = "{"
         for con in context:
             try:
@@ -100,6 +107,5 @@ class TemplateParser(object):
                 pass
         context_str += "}"
 
-        log.info('''\t\tcontext = template.Context(%s)''' % context_str)
-        log.info('''\t\tself.assertEqual(tmpl.render(context), u"""%s""")''' % output_str)
-
+        Testmaker.log.info('''        context = template.Context(%s)''' % context_str)
+        Testmaker.log.info('''        self.assertEqual(tmpl.render(context), u"""%s""")''' % output_str)
