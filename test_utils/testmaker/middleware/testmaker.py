@@ -67,10 +67,11 @@ class TestMakerMiddleware(object):
                 response = c.get(request.path, getdict)
                 self.serializer.save_response(request, response)
                 self.processor.save_response(request, response)
+        return None
 
     def process_response(self, request, response):
-        c = Context({'file': Testmaker.logfile()})
-        s = RESPONSE_TEMPLATE.render(c)
-        response.content = str(s) + str(response.content)
+        if 'test_client_true' not in request.REQUEST:
+            c = Context({'file': Testmaker.logfile()})
+            s = RESPONSE_TEMPLATE.render(c)
+            response.content = str(s) + str(response.content)
         return response
-

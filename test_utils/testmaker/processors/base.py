@@ -18,7 +18,7 @@ class Processer(object):
         self.data = {}
 
     def shall_we_proceed(self, request):
-        if 'media' in request.path:
+        if 'media' in request.path or 'test_utils' in request.path:
             return False
         return True
 

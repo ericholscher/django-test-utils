@@ -13,7 +13,8 @@ def set_logging(request, filename=None):
     serialize_file = '/tmp/testmaker/tests/%s_serial_custm.py' % filename
     tm = Testmaker()
     tm.setup_logging(test_file=log_file, serialize_file=serialize_file)
-    tm.prepare_test_file()
+    #tm.app_name = 'tmp'
+    #tm.prepare_test_file()
     return HttpResponse('Setup logging %s' % tm.test_file)
 
 def show_log(request):
