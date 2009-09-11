@@ -11,4 +11,7 @@ setup(
     download_url='http://www.github.com/ericholscher/django-test-utils/tarball/0.3.0',
     test_suite = "test_project.runtests.runtests",
     include_package_data = True,
+    install_requires=[
+        'BeautifulSoup',
+    ]
     )
