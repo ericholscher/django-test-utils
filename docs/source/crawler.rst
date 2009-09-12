@@ -3,20 +3,6 @@
 Django Crawler
 -----------------
 
-Usage
-~~~~~
-
-The crawler at the moment has 4 options implemented on it. I will
-outline them below and show example of the output. It is implemented
-as a management command, named crawlurls. You simply add `test_utils`
-to your `INSTALLED_APPS` and you are good to go. So to run it you
-simply do `./manage.py crawlurls`. It crawls your site using the
-`Django Test Client
-<http://docs.djangoproject.com/en/dev/topics/testing/#module-
-django.test.client>`__ (so no network traffic is required!) This
-allows the crawler to have intimate knowledge of your Django Code.
-This allows it to have features that other crawlers can't have.
-
 
 Core features
 ~~~~~~~~~~~~~
@@ -26,6 +12,35 @@ then loads up all of the regular expressions from these URLConfs to
 examine later. Once the crawler is done crawling your site, it will
 tell you what URLConf entries are not being hit.
 
+
+Usage
+~~~~~
+
+The crawler is implemented as a management command.
+
+Step 1: Add `test_utils` to your `INSTALLED_APPS`
+
+Step 2: The syntax for invoking the crawler looks like:
+
+.. sourcecode:: python
+
+     ./manage.py crawlurls [options] [relative_start_url]
+
+Relative start URLs are assumed to be relative to the site root and should
+look like 'some/path', 'home', or even '/'. The relative start URL will be
+normalized with leading and trailing slashes if they are not provided. The
+default relative start URL is '/'.
+
+The crawler at the moment has 4 options implemented on it. It crawls your
+site using the `Django Test Client
+<http://docs.djangoproject.com/en/dev/topics/testing/#module-
+django.test.client>`__ (so no network traffic is required!) This
+allows the crawler to have intimate knowledge of your Django Code.
+This allows it to have features that other crawlers can't have.
+
+
+Options
+~~~~~~~
 
 -v --verbosity [0,1,2]
 ``````````````````````
