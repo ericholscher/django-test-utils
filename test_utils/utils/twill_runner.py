@@ -178,7 +178,7 @@ class _EasyTwillBrowser(twill.browser.TwillBrowser):
     def go(self, url, args=None, kwargs=None, default=None):
         assert not ((args or kwargs) and default==False)
 
-        if args or kwargs:
+        if args is not None or kwargs is not None:
             url = reverse(url, args=args, kwargs=kwargs)
             default = True    # default is implied
 
