@@ -39,9 +39,12 @@ class Processor(base.Processer):
                 context = self._get_context(response.context)
                 self._log_context(context)
                 #This is where template tag outputting would go
+                #Turned off until it gets betterer
+                """
                 parser = TemplateParser(response.template[0], context)
                 parser.parse()
                 parser.create_tests()
+                """
 
 
     def _log_request(self, request):

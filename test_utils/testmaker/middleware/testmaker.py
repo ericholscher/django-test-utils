@@ -24,6 +24,7 @@ if not Testmaker.enabled:
 
 serializer_pref = getattr(settings, 'TESTMAKER_SERIALIZER', 'pickle')
 processor_pref = getattr(settings, 'TESTMAKER_PROCESSOR', 'django')
+SHOW_TESTMAKER_HEADER = getattr(settings, 'SHOW_TESTMAKER_HEADER', False)
 
 RESPONSE_TEMPLATE = Template("""
 <div class="wrapper" style="background-color: red; padding: 5px; color: #fff; width: 100%;">
@@ -70,7 +71,8 @@ class TestMakerMiddleware(object):
         return None
 
     def process_response(self, request, response):
-        if 'test_client_true' not in request.REQUEST:
+        if 'test_client_true' not in request.REQUEST \
+        and SHOW_TESTMAKER_HEADER:
             c = Context({'file': Testmaker.logfile()})
             s = RESPONSE_TEMPLATE.render(c)
             response.content = str(s) + str(response.content)
