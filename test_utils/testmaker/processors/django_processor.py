@@ -9,7 +9,7 @@ from test_utils.templatetags import TemplateParser
 
 
 TEST_TEMPLATE = """    def test_{{path}}_{{time}}(self):
-        r = c.{{method}}({{request_str}})"""
+        r = self.client.{{method}}({{request_str}})"""
 
 STATUS_TEMPLATE = """        self.assertEqual(r.status_code, {{status_code}})"""
 
