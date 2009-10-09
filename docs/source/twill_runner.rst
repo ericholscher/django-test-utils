@@ -8,7 +8,7 @@ Integrates the twill web browsing scripting language with Django.
 Introducation
 --------------
 
-Provides too main functions, ``setup()`` and ``teardown``, that hook
+Provides two main functions, ``setup()`` and ``teardown``, that hook
 (and unhook) a certain host name to the WSGI interface of your Django
 app, making it possible to test your site using twill without actually
 going through TCP/IP.
