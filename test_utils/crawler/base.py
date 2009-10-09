@@ -54,7 +54,7 @@ class Crawler(object):
             print "Getting %s (%s) from (%s)" % (to_url, request_dict, from_url)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
-        resp = self.c.get(url_path, request_dict)
+        resp = self.c.get(url_path, request_dict, follow=True)        
         test_signals.post_request.send(self, url=to_url, response=resp)
         returned_urls = self._parse_urls(to_url, resp)
         test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
