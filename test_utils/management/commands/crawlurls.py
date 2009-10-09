@@ -30,6 +30,11 @@ class Command(BaseCommand):
 
 
         verbosity = int(options.get('verbosity', 1))
+        
+        if len(args) > 1:
+            raise CommandError('Only one start url is currently supported.')
+        else:
+            start_url = args[0] if args else '/'
 
         if settings.ADMIN_FOR:
             settings_modules = [__import__(m, {}, {}, ['']) for m in settings.ADMIN_FOR]
@@ -51,5 +56,5 @@ class Command(BaseCommand):
 
             #Now we have all of our URLs to test
 
-        c = Crawler('/', conf_urls=conf_urls, verbosity=verbosity)
+        c = Crawler(start_url, conf_urls=conf_urls, verbosity=verbosity)
         c.run()
