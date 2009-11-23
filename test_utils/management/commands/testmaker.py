@@ -39,7 +39,7 @@ class Command(BaseCommand):
         fixture_format = options.get('format', 'xml')
 
         if app:
-            app = models.get_app(app_name)
+            app = models.get_app(app)
 
         if not app:
             #Don't serialize the whole DB :)
