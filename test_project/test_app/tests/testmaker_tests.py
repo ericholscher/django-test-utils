@@ -13,7 +13,7 @@ class CrawlerTests(TestCase):
     """
     Tests to test the Crawler API
     """
-    urls = "polls.urls"
+    urls = "test_project.polls.urls"
     fixtures = ['polls_testmaker.json']
 
     def test_basic_crawling(self):
@@ -28,7 +28,7 @@ class TestMakerTests(TestCase):
     """
     Tests to test basic testmaker functionality.
     """
-    urls = "polls.urls"
+    urls = "test_project.polls.urls"
     fixtures = ['polls_testmaker.json']
 
     def setUp(self):
