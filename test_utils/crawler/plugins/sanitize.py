@@ -9,7 +9,7 @@ class Sanitize(Plugin):
         try:
             soup = BeautifulSoup(kwargs['response'].content)
             if soup.find(text='&lt;') or soup.find(text='&gt;'):
-                print "%s has dirty html" % url
+                print "%s has dirty html" % kwargs['url']
         except Exception, e:
             fo = open("temp.html", 'w')
             fo.write(kwargs['response'].content)
