@@ -3,7 +3,7 @@
 from django.shortcuts import get_object_or_404, render_to_response
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from test_utils.tests.polls.models import Poll, Choice
+from polls.models import Poll, Choice
 
 def vote(request, poll_id):
     p = get_object_or_404(Poll, pk=poll_id)

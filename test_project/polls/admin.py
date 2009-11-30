@@ -1,4 +1,4 @@
-from test_utils.tests.polls.models import Poll, Choice
+from polls.models import Poll, Choice
 from django.contrib import admin
 
 class ChoiceInline(admin.StackedInline):
