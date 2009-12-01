@@ -12,7 +12,7 @@ class Sanitize(Plugin):
     def post_request(self, sender, **kwargs):
 
         try:
-            soup = BeautifulSoup(kwargs['response'].content)
+            soup = BeautifulSoup(kwargs['response'].content.decode("utf-8"))
             if soup.find(text='&lt;') or soup.find(text='&gt;'):
                 LOG.warning("%s has dirty html", kwargs['url'])
         except Exception, e:
