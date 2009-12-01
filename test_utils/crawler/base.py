@@ -67,6 +67,7 @@ class Crawler(object):
         parsed = urlparse.urlparse(to_url)
         request_dict = dict(cgi.parse_qsl(parsed.query))
         url_path = parsed.path
+
         #url_path now contains the path, request_dict contains get params
 
         LOG.info("%s: link to %s with parameters %s", from_url, to_url, request_dict)
@@ -80,7 +81,13 @@ class Crawler(object):
         if resp.status_code != 200:
             LOG.warning("%s links to %s, which returned HTTP status %d", from_url, url_path, resp.status_code)
 
-        returned_urls = self._parse_urls(to_url, resp)
+        if resp.redirect_chain:
+            base_url = resp.redirect_chain[-1][0]
+            LOG.debug("%s: followed redirect: %s", to_url, " -> ".join([i for i, j in resp.redirect_chain]))
+        else:
+            base_url = to_url
+
+        returned_urls = self._parse_urls(base_url, resp)
 
         test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
 
