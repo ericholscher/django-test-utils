@@ -12,7 +12,7 @@ from django.test.utils import setup_test_environment, teardown_test_environment
 from test_utils.crawler import signals as test_signals
 from test_utils.crawler.plugins.base import Plugin
 
-crawl_logger = logging.getLogger('crawler')
+LOG = logging.getLogger('crawler')
 
 class Crawler(object):
     """
@@ -40,13 +40,23 @@ class Crawler(object):
         soup = BeautifulSoup(resp.content.decode("utf-8"))
         returned_urls = []
         hrefs = [a['href'] for a in soup('a') if a.has_key('href')]
+
         for a in hrefs:
             parsed_href = urlparse.urlparse(a)
-            if parsed_href.path.startswith('/') and not parsed_href.scheme:
+
+            if not parsed_href.path:
+                continue
+
+            if parsed_href.scheme and not parsed_href.netloc.startswith("testserver"):
+                LOG.debug("Skipping external link: %s", a)
+                continue
+
+            if parsed_href.path.startswith('/'):
                 returned_urls.append(a)
-            elif not parsed_href.scheme:
+            else:
                 #Relative path = previous path + new path
                 returned_urls.append(parsed.path + a)
+
         return returned_urls
 
     def get_url(self, from_url, to_url):
@@ -59,7 +69,7 @@ class Crawler(object):
         url_path = parsed.path
         #url_path now contains the path, request_dict contains get params
 
-        crawl_logger.info("%s: link to %s with parameters %s", from_url, to_url, request_dict)
+        LOG.info("%s: link to %s with parameters %s", from_url, to_url, request_dict)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
         resp = self.c.get(url_path, request_dict, follow=True)
@@ -84,7 +94,7 @@ class Crawler(object):
             try:
                 resp, returned_urls = self.get_url(from_url, to_url)
             except Exception, e:
-                crawl_logger.exception("%s had unhandled exception: %s", to_url, e)
+                LOG.exception("%s had unhandled exception: %s", to_url, e)
                 continue
             finally:
                 transaction.rollback()
