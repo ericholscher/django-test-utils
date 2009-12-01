@@ -31,12 +31,12 @@ Step 2:
 
 .. sourcecode:: python
 
-     ./manage.py testmaker APP
+     ./manage.py testmaker -a APP_NAME
 
 
-This will start the development server with testmaker loaded in. APP
-must be in installed apps, and it will use Django's mechanism for
-finding it. It should look a little something like this:
+This will start the development server with testmaker loaded in. APP_NAME must
+be in installed apps, and it will use Django's mechanism for finding it. It
+should look a little something like this:
 
 .. sourcecode:: python
 
