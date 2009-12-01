@@ -1,11 +1,19 @@
+from collections import defaultdict
 from optparse import make_option
 import logging
+import sys
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.admindocs.views import extract_views_from_urlpatterns
 
 from test_utils.crawler.base import Crawler
+
+class LogStatsHandler(logging.Handler):
+    stats = defaultdict(int)
+
+    def emit(self, record):
+        self.stats[record.levelno] += 1
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -42,6 +50,10 @@ class Command(BaseCommand):
         crawl_logger.setLevel(logging.DEBUG)
         crawl_logger.propagate = 0
 
+        log_stats = LogStatsHandler()
+
+        crawl_logger.addHandler(log_stats)
+
         console = logging.StreamHandler()
         console.setLevel(log_level)
         console.setFormatter(logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s'))
@@ -77,3 +89,12 @@ class Command(BaseCommand):
 
         c = Crawler(start_url, conf_urls=conf_urls, verbosity=verbosity)
         c.run()
+
+        # We'll exit with a non-zero status if we had any errors
+        max_log_level = max(log_stats.stats.keys())
+        if max_log_level >= logging.ERROR:
+            sys.exit(2)
+        elif max_log_level >= logging.WARNING:
+            sys.exit(1)
+        else:
+            sys.exit(0)
