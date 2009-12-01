@@ -35,7 +35,7 @@ class Crawler(object):
 
     def _parse_urls(self, url, resp):
         parsed = urlparse.urlparse(url)
-        soup = BeautifulSoup(resp.content)
+        soup = BeautifulSoup(resp.content.decode("utf-8"))
         returned_urls = []
         hrefs = [a['href'] for a in soup('a') if a.has_key('href')]
         for a in hrefs:
