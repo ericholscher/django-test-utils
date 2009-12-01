@@ -37,7 +37,14 @@ class Crawler(object):
 
     def _parse_urls(self, url, resp):
         parsed = urlparse.urlparse(url)
-        soup = BeautifulSoup(resp.content.decode("utf-8"))
+
+        if resp['Content-Type'] == "text/html; charset=utf-8":
+            html = resp.content.decode("utf-8")
+        else:
+            html = resp.content
+
+        soup = BeautifulSoup(html)
+
         returned_urls = []
         hrefs = [a['href'] for a in soup('a') if a.has_key('href')]
 
@@ -87,9 +94,12 @@ class Crawler(object):
         else:
             base_url = to_url
 
-        returned_urls = self._parse_urls(base_url, resp)
 
-        test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
+        if resp['Content-Type'].startswith("text/html"):
+            returned_urls = self._parse_urls(base_url, resp)
+            test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
+        else:
+            returned_urls = list()
 
         return (resp, returned_urls)
 
