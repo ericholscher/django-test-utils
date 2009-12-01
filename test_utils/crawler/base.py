@@ -4,8 +4,10 @@ import logging
 
 from BeautifulSoup import BeautifulSoup
 
+from django.conf import settings
 from django.db import transaction
 from django.test.client import Client
+from django.test.utils import setup_test_environment, teardown_test_environment
 
 from test_utils.crawler import signals as test_signals
 from test_utils.crawler.plugins.base import Plugin
@@ -65,6 +67,11 @@ class Crawler(object):
         return (resp, returned_urls)
 
     def run(self):
+
+        old_DEBUG = settings.DEBUG
+        settings.DEBUG = False
+
+        setup_test_environment()
         test_signals.start_run.send(self)
 
         while self.not_crawled:
@@ -87,3 +94,7 @@ class Crawler(object):
                     self.not_crawled.append((to_url, base_url))
 
         test_signals.finish_run.send(self)
+
+        teardown_test_environment()
+
+        settings.DEBUG = old_DEBUG
