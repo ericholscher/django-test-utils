@@ -1,11 +1,14 @@
-from test_utils.crawler import signals as test_signals
-from test_utils.crawler.plugins.base import Plugin
-from django.test.client import Client
-import re, cgi, urlparse, time
+import cgi
+import urlparse
+import logging
+
 from BeautifulSoup import BeautifulSoup
 
 from django.db import transaction
 from django.test.client import Client
+
+from test_utils.crawler import signals as test_signals
+from test_utils.crawler.plugins.base import Plugin
 
 class Crawler(object):
     """
@@ -52,8 +55,7 @@ class Crawler(object):
         url_path = parsed.path
         #url_path now contains the path, request_dict contains get params
 
-        if self.verbosity > 0:
-            print "Getting %s (%s) from (%s)" % (to_url, request_dict, from_url)
+        logging.info("Retrieving %s (%s) from (%s)", to_url, request_dict, from_url)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
         resp = self.c.get(url_path, request_dict, follow=True)
@@ -73,9 +75,8 @@ class Crawler(object):
             try:
                 resp, returned_urls = self.get_url(from_url, to_url)
             except Exception, e:
-                print "Exception: %s (%s)" % (e, to_url)
+                logging.exception("%s had unhandled exception: %s", to_url, e)
                 continue
-            """
             finally:
                 transaction.rollback()
 
@@ -84,4 +85,5 @@ class Crawler(object):
             for base_url in returned_urls:
                 if base_url not in [to for fro,to in self.not_crawled] and not self.crawled.has_key(base_url):
                     self.not_crawled.append((to_url, base_url))
+
         test_signals.finish_run.send(self)

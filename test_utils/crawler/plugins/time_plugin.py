@@ -1,5 +1,7 @@
-from base import Plugin
 import time
+import logging
+
+from base import Plugin
 
 class Time(Plugin):
     """
@@ -20,10 +22,10 @@ class Time(Plugin):
         old_time = self.timed_urls[url]
         total_time = cur - old_time
         self.timed_urls[url] = total_time
-        print "Time taken: %s" % self.timed_urls[url]
+        logging.debug("Time taken: %s", self.timed_urls[url])
 
     def finish_run(self, sender, **kwargs):
         "Print the longest time it took for pages to load"
         alist = sorted(self.timed_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, ttime in alist[:10]:
-            print "%s took %f" % (url, ttime)
+            logging.info("%s took %f", url, ttime)
