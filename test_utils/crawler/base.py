@@ -4,6 +4,8 @@ from django.test.client import Client
 import re, cgi, urlparse, time
 from BeautifulSoup import BeautifulSoup
 
+from django.db import transaction
+from django.test.client import Client
 
 class Crawler(object):
     """
@@ -62,16 +64,21 @@ class Crawler(object):
 
     def run(self):
         test_signals.start_run.send(self)
-        while len(self.not_crawled) > 0:
+
+        while self.not_crawled:
             #Take top off not_crawled and evaluate it
             from_url, to_url = self.not_crawled.pop(0)
-            #try:
-            resp, returned_urls = self.get_url(from_url, to_url)
-            """
+
+            transaction.enter_transaction_management()
+            try:
+                resp, returned_urls = self.get_url(from_url, to_url)
             except Exception, e:
                 print "Exception: %s (%s)" % (e, to_url)
                 continue
             """
+            finally:
+                transaction.rollback()
+
             self.crawled[to_url] = True
             #Find its links that haven't been crawled
             for base_url in returned_urls:
