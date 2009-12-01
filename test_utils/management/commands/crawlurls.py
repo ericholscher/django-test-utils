@@ -1,8 +1,10 @@
+from optparse import make_option
+import logging
+
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.admindocs.views import extract_views_from_urlpatterns
 
-from optparse import make_option
 from test_utils.crawler.base import Crawler
 
 class Command(BaseCommand):
@@ -27,10 +29,25 @@ class Command(BaseCommand):
     args = "[relative start url]"
 
     def handle(self, *args, **options):
-
-
         verbosity = int(options.get('verbosity', 1))
-        
+
+        if verbosity > 1:
+            log_level = logging.DEBUG
+        elif verbosity:
+            log_level = logging.INFO
+        else:
+            log_level = logging.WARN
+
+        crawl_logger = logging.getLogger('crawler')
+        crawl_logger.setLevel(logging.DEBUG)
+        crawl_logger.propagate = 0
+
+        console = logging.StreamHandler()
+        console.setLevel(log_level)
+        console.setFormatter(logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s'))
+
+        crawl_logger.addHandler(console)
+
         if len(args) > 1:
             raise CommandError('Only one start url is currently supported.')
         else:
@@ -42,12 +59,14 @@ class Command(BaseCommand):
             settings_modules = [settings]
 
         conf_urls = {}
+
         for settings_mod in settings_modules:
             try:
                 urlconf = __import__(settings_mod.ROOT_URLCONF, {}, {}, [''])
             except Exception, e:
-                print ("Error occurred while trying to load %s: %s" % (settings_mod.ROOT_URLCONF, str(e)))
+                logging.exception("Error occurred while trying to load %s: %s", settings_mod.ROOT_URLCONF, str(e))
                 continue
+
             view_functions = extract_views_from_urlpatterns(urlconf.urlpatterns)
             for (func, regex) in view_functions:
                 #Get function name and add it to the hash of URLConf urls

@@ -1,5 +1,9 @@
-from base import Plugin
+import logging
 import re
+
+from base import Plugin
+
+LOG = logging.getLogger("crawler")
 
 class URLConf(Plugin):
     """
@@ -12,8 +16,10 @@ class URLConf(Plugin):
             pattern = pattern.replace('^', '').replace('$', '').replace('//', '/')
             curr = re.compile(pattern)
             matched = False
+
             for url in sender.crawled:
                 if curr.search(url):
                     matched = True
+
             if not matched:
-                print "NOT MATCHED: %s" % pattern
+                LOG.warning("This pattern was not matched by any crawled page: %s", pattern)

@@ -3,6 +3,8 @@ import logging
 
 from base import Plugin
 
+LOG = logging.getLogger('crawler')
+
 class Time(Plugin):
     """
     Follow the time it takes to run requests.
@@ -22,10 +24,10 @@ class Time(Plugin):
         old_time = self.timed_urls[url]
         total_time = cur - old_time
         self.timed_urls[url] = total_time
-        logging.debug("Time taken: %s", self.timed_urls[url])
+        LOG.debug("Time taken: %s", self.timed_urls[url])
 
     def finish_run(self, sender, **kwargs):
         "Print the longest time it took for pages to load"
         alist = sorted(self.timed_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, ttime in alist[:10]:
-            logging.info("%s took %f", url, ttime)
+            LOG.info("%s took %f", url, ttime)

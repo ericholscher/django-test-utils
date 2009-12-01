@@ -12,6 +12,8 @@ from django.test.utils import setup_test_environment, teardown_test_environment
 from test_utils.crawler import signals as test_signals
 from test_utils.crawler.plugins.base import Plugin
 
+crawl_logger = logging.getLogger('crawler')
+
 class Crawler(object):
     """
     This is a class that represents a URL crawler in python
@@ -57,7 +59,7 @@ class Crawler(object):
         url_path = parsed.path
         #url_path now contains the path, request_dict contains get params
 
-        logging.info("Retrieving %s (%s) from (%s)", to_url, request_dict, from_url)
+        crawl_logger.info("%s: link to %s with parameters %s", from_url, to_url, request_dict)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
         resp = self.c.get(url_path, request_dict, follow=True)
@@ -82,7 +84,7 @@ class Crawler(object):
             try:
                 resp, returned_urls = self.get_url(from_url, to_url)
             except Exception, e:
-                logging.exception("%s had unhandled exception: %s", to_url, e)
+                crawl_logger.exception("%s had unhandled exception: %s", to_url, e)
                 continue
             finally:
                 transaction.rollback()
