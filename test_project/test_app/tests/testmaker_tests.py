@@ -34,6 +34,7 @@ class TestMakerTests(TestCase):
     def setUp(self):
         self.tm = Testmaker()
         self.tm.setup_logging('test_file', 'serialize_file')
+        Testmaker.enabled = True
 
     def tearDown(self):
         #Teardown logging somehow?

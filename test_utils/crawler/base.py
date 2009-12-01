@@ -30,7 +30,7 @@ class Crawler(object):
         parsed = urlparse.urlparse(url)
         soup = BeautifulSoup(resp.content)
         returned_urls = []
-        hrefs = [a['href'] for a in soup.findAll('a') if a.has_key('href')]
+        hrefs = [a['href'] for a in soup('a') if a.has_key('href')]
         for a in hrefs:
             parsed_href = urlparse.urlparse(a)
             if parsed_href.path.startswith('/') and not parsed_href.scheme:
@@ -54,7 +54,7 @@ class Crawler(object):
             print "Getting %s (%s) from (%s)" % (to_url, request_dict, from_url)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
-        resp = self.c.get(url_path, request_dict, follow=True)        
+        resp = self.c.get(url_path, request_dict, follow=True)
         test_signals.post_request.send(self, url=to_url, response=resp)
         returned_urls = self._parse_urls(to_url, resp)
         test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
