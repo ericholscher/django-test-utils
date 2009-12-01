@@ -1,10 +1,10 @@
-
-
+import csv
+import logging
+import os
 
 from base import Plugin
-import time
-import os
-import csv
+
+LOG = logging.getLogger("crawler")
 
 # from python mailing list http://mail.python.org/pipermail/python-list/2004-June/266257.html
 _proc_status = '/proc/%d/status' % os.getpid()  # Linux only?
@@ -25,12 +25,12 @@ def _VmB(VmKey):
     except:
         pass
     return 0.0
- 
+
 def memory(since=0.0):
     '''Return process memory usage in bytes.
     '''
     return _VmB('VmSize:') - since
- 
+
 def stacksize(since=0.0):
     '''Return process stack size in bytes.
     '''
@@ -42,13 +42,13 @@ class Memory(Plugin):
     Calculate proc memory consumed before and after request
     """
     active = False
-    
+
     def __init__(self):
         super(Memory, self).__init__()
         self.memory_urls = self.data['memory_urls'] = {}
-        
+
         self.csv_writer = csv.writer(open('memory.csv', 'w'))
-        
+
 
     def pre_request(self, sender, **kwargs):
         url = kwargs['url']
@@ -60,14 +60,14 @@ class Memory(Plugin):
         old_memory = self.memory_urls[url]
         total_memory = cur - old_memory
         self.memory_urls[url] = total_memory
-        print "Memory consumed: %s" % self.memory_urls[url]
+        LOG.info("Memory consumed: %s", self.memory_urls[url])
         self.csv_writer.writerow([url,cur, old_memory, total_memory])
 
     def finish_run(self, sender, **kwargs):
         "Print the most memory consumed by a view"
         alist = sorted(self.memory_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, mem in alist[:10]:
-            print "%s took %f of memory" % (url, mem)
+            LOG.info("%s took %f of memory", url, mem)
 
 
 
