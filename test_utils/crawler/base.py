@@ -72,10 +72,18 @@ class Crawler(object):
         LOG.info("%s: link to %s with parameters %s", from_url, to_url, request_dict)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
+
         resp = self.c.get(url_path, request_dict, follow=True)
+
         test_signals.post_request.send(self, url=to_url, response=resp)
+
+        if resp.status_code != 200:
+            LOG.warning("%s links to %s, which returned HTTP status %d", from_url, url_path, resp.status_code)
+
         returned_urls = self._parse_urls(to_url, resp)
+
         test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
+
         return (resp, returned_urls)
 
     def run(self):
