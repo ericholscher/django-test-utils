@@ -12,14 +12,23 @@ class URLConf(Plugin):
     """
 
     def finish_run(self, sender, **kwargs):
+        normal_patterns = list()
+        admin_patterns = list()
+
         for pattern in sender.conf_urls.keys():
             pattern = pattern.replace('^', '').replace('$', '').replace('//', '/')
             curr = re.compile(pattern)
-            matched = False
 
-            for url in sender.crawled:
-                if curr.search(url):
-                    matched = True
+            if any(curr.search(url) for url in sender.crawled):
+                continue
 
-            if not matched:
-                LOG.warning("This pattern was not matched by any crawled page: %s", pattern)
+            if pattern.startswith("admin"):
+                admin_patterns.append(pattern)
+            else:
+                normal_patterns.append(pattern)
+
+        if admin_patterns:
+            logging.debug("These admin pages were not crawled: %s", "\n\t".join(sorted(admin_patterns)))
+
+        if normal_patterns:
+            logging.debug("These patterns were not matched during the crawl: %s", "\n\t".join(sorted(normal_patterns)))
