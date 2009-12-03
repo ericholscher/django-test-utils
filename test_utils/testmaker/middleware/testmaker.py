@@ -22,8 +22,6 @@ if not Testmaker.enabled:
     testmaker.prepare()
 
 
-serializer_pref = getattr(settings, 'TESTMAKER_SERIALIZER', 'pickle')
-processor_pref = getattr(settings, 'TESTMAKER_PROCESSOR', 'django')
 SHOW_TESTMAKER_HEADER = getattr(settings, 'SHOW_TESTMAKER_HEADER', False)
 
 RESPONSE_TEMPLATE = Template("""
@@ -45,6 +43,8 @@ class TestMakerMiddleware(object):
         Serializers will be pluggable and allow for custom recording.
         Processers will process the serializations into test formats.
         """
+        serializer_pref = getattr(settings, 'TESTMAKER_SERIALIZER', 'pickle')
+        processor_pref = getattr(settings, 'TESTMAKER_PROCESSOR', 'django')
         self.serializer = serializers.get_serializer(serializer_pref)()
         self.processor = processors.get_processor(processor_pref)()
 
