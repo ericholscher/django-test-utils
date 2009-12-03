@@ -23,6 +23,14 @@ class CrawlerTests(TestCase):
         c.run()
         self.assertEqual(c.crawled, {'/': True, u'/1': True, u'/2': True})
 
+    def test_relative_crawling(self):
+        conf_urls = {}
+        verbosity = 1
+        c = Crawler('/1', conf_urls=conf_urls, verbosity=verbosity)
+        c.run()
+        self.assertEqual(c.crawled, {u'/1': True})
+
+
 
 class TestMakerTests(TestCase):
     """
