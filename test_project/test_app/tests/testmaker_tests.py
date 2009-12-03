@@ -55,3 +55,12 @@ class TestMakerTests(TestCase):
         logs = open('test_file')
         output = logs.read()
         self.assertTrue(output.find('[<Poll: What\'s up?>, <Poll: Test poll>]') != -1)
+
+    def test_twill_processor(self):
+        settings.TESTMAKER_PROCESSOR = 'twill'
+        self.tm.insert_middleware()
+        self.client.get('/')
+        self.client.get('/1/')
+        logs = open('test_file')
+        output = logs.read()
+        self.assertTrue(output.find('code 200') != -1)
