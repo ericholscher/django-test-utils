@@ -64,3 +64,13 @@ class TestMakerTests(TestCase):
         logs = open('test_file')
         output = logs.read()
         self.assertTrue(output.find('code 200') != -1)
+
+    def test_not_inserting_multiple_times(self):
+        """
+        Test that the middleware will only be inserted once.
+        """
+        self.tm.insert_middleware()
+        self.tm.insert_middleware()
+        middleware = settings.MIDDLEWARE_CLASSES
+        #A set of the middleware should be the same, meaning the item isn't in twice.
+        self.assertEqual(sorted(list(middleware)), sorted(list(set(middleware))))
