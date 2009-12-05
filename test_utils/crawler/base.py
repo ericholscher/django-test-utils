@@ -33,6 +33,7 @@ class Crawler(object):
         for plug in Plugin.__subclasses__():
             active = getattr(plug, 'active', True)
             if active:
+                #TODO: Check if plugin supports writing CSV (or to a file in general?)
                 self.plugins.append(plug())
 
     def _parse_urls(self, url, resp):

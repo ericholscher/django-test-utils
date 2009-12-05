@@ -43,12 +43,12 @@ class Memory(Plugin):
     """
     active = False
 
-    def __init__(self):
+    def __init__(self, write_csv=False):
         super(Memory, self).__init__()
         self.memory_urls = self.data['memory_urls'] = {}
-
-        self.csv_writer = csv.writer(open('memory.csv', 'w'))
-
+        self.write_csv = write_csv
+        if self.write_csv:
+            self.csv_writer = csv.writer(open('memory.csv', 'w'))
 
     def pre_request(self, sender, **kwargs):
         url = kwargs['url']
@@ -61,13 +61,11 @@ class Memory(Plugin):
         total_memory = cur - old_memory
         self.memory_urls[url] = total_memory
         LOG.info("Memory consumed: %s", self.memory_urls[url])
-        self.csv_writer.writerow([url,cur, old_memory, total_memory])
+        if self.write_csv:
+            self.csv_writer.writerow([url,cur, old_memory, total_memory])
 
     def finish_run(self, sender, **kwargs):
         "Print the most memory consumed by a view"
         alist = sorted(self.memory_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, mem in alist[:10]:
             LOG.info("%s took %f of memory", url, mem)
-
-
-
