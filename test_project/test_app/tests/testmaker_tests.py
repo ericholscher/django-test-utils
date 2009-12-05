@@ -43,6 +43,7 @@ class TestMakerTests(TestCase):
         self.tm = Testmaker()
         self.tm.setup_logging('test_file', 'serialize_file')
         Testmaker.enabled = True
+        self.tm.insert_middleware()
 
     def tearDown(self):
         #Teardown logging somehow?
@@ -50,7 +51,6 @@ class TestMakerTests(TestCase):
         os.remove('serialize_file')
 
     def test_basic_testmaker(self):
-        self.tm.insert_middleware()
         self.client.get('/')
         logs = open('test_file')
         output = logs.read()
@@ -58,7 +58,6 @@ class TestMakerTests(TestCase):
 
     def test_twill_processor(self):
         settings.TESTMAKER_PROCESSOR = 'twill'
-        self.tm.insert_middleware()
         self.client.get('/')
         self.client.get('/1/')
         logs = open('test_file')
