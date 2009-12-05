@@ -1,10 +1,15 @@
+import sys
 import re
 import cPickle as pickle
 from django.utils import simplejson as json
-from test_utils.testmaker import setup_logging
-from test_utils.testmaker.base_processor import Processer
+from test_utils.testmaker import Testmaker
+from test_utils.testmaker.processors.django_processor import Processor
 
-in_file = '/Users/ericholscher/lib/artocrats/pieces/tests/pieces_testdata.pickle'
+if len(sys.argv) == 2:
+    in_file = sys.argv[1]
+else:
+    raise Exception('Need file name')
+
 f = open(in_file)
 
 buffer = []
@@ -12,11 +17,12 @@ buffer = []
 req_re = re.compile('---REQUEST_BREAK---')
 res_re = re.compile('---RESPONSE_BREAK---')
 
-processor = Processer()
+processor = Processor('replay_processor')
+tm = Testmaker()
 
-setup_logging('/Users/ericholscher/lib/artocrats/pieces/tests/redo.py', '/dev/null')
+tm.setup_logging('replay_file', '/dev/null')
 
-serial_obj = json
+serial_obj = pickle
 
 class Request(dict):
     'Mocking a dict to allow attribute access'
@@ -28,14 +34,14 @@ for line in f.readlines():
         #process request
         to_pickle = ''.join(buffer)
         request = Request(serial_obj.loads(to_pickle))
-        processor.log_request(request)
+        processor.save_request(request)
         print request['path'], request['time']
         buffer = []
     elif res_re.search(line):
         #process response
         to_pickle = ''.join(buffer)
         response = Request(serial_obj.loads(to_pickle))
-        self.processer.process_response(request, response)
+        processer.save_response(request, response)
         print response['status_code'], response['time']
         buffer = []
     else:
