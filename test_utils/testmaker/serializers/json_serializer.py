@@ -13,7 +13,7 @@ class Serializer(base.Serializer):
         try:
             self.ser.info(json.dumps(request_dict))
             self.ser.info(REQUEST_UNIQUE_STRING)
-        except (TypeError):
+        except TypeError, e:
             #Can't serialize wsgi.error objects
             pass
 
@@ -23,6 +23,6 @@ class Serializer(base.Serializer):
         try:
             self.ser.info(json.dumps(response_dict))
             self.ser.info(RESPONSE_UNIQUE_STRING)
-        except (TypeError):
+        except TypeError, e:
             #Can't serialize wsgi.error objects
             pass
