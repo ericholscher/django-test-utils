@@ -1,4 +1,5 @@
 from django.test.simple import *
+import os
 
 def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
     """
@@ -62,6 +63,9 @@ def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
 
     # does test db exist already ?
     try:
+        if settings.DATABASE_ENGINE == 'sqlite3':
+            if not os.path.exists(settings.DATABASE_NAME):
+                raise DatabaseError
         cursor = connection.cursor()
     except DatabaseError, e:
         # db does not exist
