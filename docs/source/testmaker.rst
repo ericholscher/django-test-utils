@@ -31,7 +31,7 @@ Step 2:
 
 .. sourcecode:: python
 
-     ./manage.py testmaker APP
+     ./manage.py testmaker -a APP
 
 
 This will start the development server with testmaker loaded in. APP
@@ -64,7 +64,7 @@ Step 3:
 
 .. sourcecode:: python
 
-    ./manage.py test APP
+    ./manage.py test -a APP
 
 Testmaker Internal Basics
 =========================
