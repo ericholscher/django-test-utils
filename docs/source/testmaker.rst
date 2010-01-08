@@ -64,7 +64,7 @@ Step 3:
 
 .. sourcecode:: python
 
-    ./manage.py test APP
+    ./manage.py test -a APP_NAME
 
 Testmaker Internal Basics
 =========================
