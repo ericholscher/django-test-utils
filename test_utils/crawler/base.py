@@ -2,7 +2,7 @@ import cgi
 import urlparse
 import logging
 
-from BeautifulSoup import BeautifulSoup
+import lxml.html
 
 from django.conf import settings
 from django.db import transaction
@@ -24,7 +24,7 @@ class Crawler(object):
         self.verbosity = verbosity
 
         #These two are what keep track of what to crawl and what has been.
-        self.not_crawled = [('START',self.base_url)]
+        self.not_crawled = [('START', self.base_url)]
         self.crawled = {}
 
         self.c = Client(REMOTE_ADDR='127.0.0.1')
@@ -44,26 +44,25 @@ class Crawler(object):
         else:
             html = resp.content
 
-        soup = BeautifulSoup(html)
+        tree = lxml.html.document_fromstring(html)
 
         returned_urls = []
-        hrefs = [a['href'] for a in soup('a') if a.has_key('href')]
 
-        for a in hrefs:
-            parsed_href = urlparse.urlparse(a)
+        for element, attribute, link, pos in tree.iterlinks():
+            parsed_href = urlparse.urlparse(link)
 
             if not parsed_href.path:
                 continue
 
             if parsed_href.scheme and not parsed_href.netloc.startswith("testserver"):
-                LOG.debug("Skipping external link: %s", a)
+                LOG.debug("Skipping external link: %s", link)
                 continue
 
             if parsed_href.path.startswith('/'):
-                returned_urls.append(a)
+                returned_urls.append(link)
             else:
                 # We'll use urlparse's urljoin since that handles things like <a href="../foo">
-                returned_urls.append(urlparse.urljoin(url, a))
+                returned_urls.append(urlparse.urljoin(url, link))
 
         return returned_urls
 
