@@ -2,7 +2,32 @@ import cgi
 import urlparse
 import logging
 
-import lxml.html
+try:
+    import lxml.html
+    def link_extractor(html):
+        tree = lxml.html.document_fromstring(html)
+        for element, attribute, link, pos in tree.iterlinks():
+            yield link
+except ImportError:
+    logging.info("Processing documents with HTMLParser; install lxml for greater performance")
+
+    from HTMLParser import HTMLParser
+
+    def link_extractor(html):
+        class LinkExtractor(HTMLParser):
+            links = set()
+
+            def handle_starttag(self, tag, attrs):
+                self.links.update(
+                    v for k, v in attrs if k == "href" or k =="src"
+                )
+
+        parser = LinkExtractor()
+        parser.feed(html)
+        parser.close()
+
+        return parser.links
+
 
 from django.conf import settings
 from django.db import transaction
@@ -44,11 +69,9 @@ class Crawler(object):
         else:
             html = resp.content
 
-        tree = lxml.html.document_fromstring(html)
-
         returned_urls = []
 
-        for element, attribute, link, pos in tree.iterlinks():
+        for link in link_extractor(html):
             parsed_href = urlparse.urlparse(link)
 
             if not parsed_href.path:
