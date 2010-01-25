@@ -8,7 +8,7 @@ try:
     from guppy import hpy
     ACTIVE = True
 except:
-    LOG.debug('Gupply plugin not found')
+    LOG.debug('Guppy plugin not found. If you want memory profiling `pip install guppy`')
     ACTIVE = False
 
 class Heap(Plugin):
