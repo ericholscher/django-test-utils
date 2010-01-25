@@ -62,8 +62,8 @@ class Crawler(object):
             if parsed_href.path.startswith('/'):
                 returned_urls.append(a)
             else:
-                #Relative path = previous path + new path
-                returned_urls.append(parsed.path + a)
+                # We'll use urlparse's urljoin since that handles things like <a href="../foo">
+                returned_urls.append(urlparse.urljoin(url, a))
 
         return returned_urls
 
