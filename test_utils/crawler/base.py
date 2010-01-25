@@ -2,8 +2,6 @@ import cgi
 import urlparse
 import logging
 
-from BeautifulSoup import BeautifulSoup
-
 from django.conf import settings
 from django.db import transaction
 from django.test.client import Client
@@ -13,6 +11,33 @@ from test_utils.crawler import signals as test_signals
 from test_utils.crawler.plugins.base import Plugin
 
 LOG = logging.getLogger('crawler')
+
+try:
+    import lxml.html
+    def link_extractor(html):
+        tree = lxml.html.document_fromstring(html)
+        for element, attribute, link, pos in tree.iterlinks():
+            yield link
+except ImportError:
+    LOG.info("Processing documents with HTMLParser; install lxml for greater performance")
+
+    from HTMLParser import HTMLParser
+
+    def link_extractor(html):
+        class LinkExtractor(HTMLParser):
+            links = set()
+
+            def handle_starttag(self, tag, attrs):
+                self.links.update(
+                    v for k, v in attrs if k == "href" or k =="src"
+                )
+
+        parser = LinkExtractor()
+        parser.feed(html)
+        parser.close()
+
+        return parser.links
+
 
 class Crawler(object):
     """
@@ -44,12 +69,9 @@ class Crawler(object):
         else:
             html = resp.content
 
-        soup = BeautifulSoup(html)
-
         returned_urls = []
-        hrefs = [a['href'] for a in soup('a') if a.has_key('href')]
 
-        for a in hrefs:
+        for a in link_extractor(html:
             parsed_href = urlparse.urlparse(a)
 
             if not parsed_href.path:
