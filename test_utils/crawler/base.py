@@ -2,6 +2,16 @@ import cgi
 import urlparse
 import logging
 
+from django.conf import settings
+from django.db import transaction
+from django.test.client import Client
+from django.test.utils import setup_test_environment, teardown_test_environment
+
+from test_utils.crawler import signals as test_signals
+from test_utils.crawler.plugins.base import Plugin
+
+LOG = logging.getLogger('crawler')
+
 try:
     import lxml.html
     def link_extractor(html):
@@ -9,7 +19,7 @@ try:
         for element, attribute, link, pos in tree.iterlinks():
             yield link
 except ImportError:
-    logging.info("Processing documents with HTMLParser; install lxml for greater performance")
+    LOG.info("Processing documents with HTMLParser; install lxml for greater performance")
 
     from HTMLParser import HTMLParser
 
@@ -29,16 +39,6 @@ except ImportError:
         return parser.links
 
 
-from django.conf import settings
-from django.db import transaction
-from django.test.client import Client
-from django.test.utils import setup_test_environment, teardown_test_environment
-
-from test_utils.crawler import signals as test_signals
-from test_utils.crawler.plugins.base import Plugin
-
-LOG = logging.getLogger('crawler')
-
 class Crawler(object):
     """
     This is a class that represents a URL crawler in python
@@ -49,7 +49,7 @@ class Crawler(object):
         self.verbosity = verbosity
 
         #These two are what keep track of what to crawl and what has been.
-        self.not_crawled = [('START', self.base_url)]
+        self.not_crawled = [('START',self.base_url)]
         self.crawled = {}
 
         self.c = Client(REMOTE_ADDR='127.0.0.1')
