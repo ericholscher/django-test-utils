@@ -1,6 +1,7 @@
 import cgi
 import urlparse
 import logging
+from HTMLParser import HTMLParseError
 
 from django.conf import settings
 from django.db import transaction
@@ -15,7 +16,11 @@ LOG = logging.getLogger('crawler')
 try:
     import lxml.html
     def link_extractor(html):
-        tree = lxml.html.document_fromstring(html)
+        try:
+            tree = lxml.html.document_fromstring(html)
+        except lxml.etree.ParseError, e:
+            raise HTMLParseError(str(e), e.position)
+
         for element, attribute, link, pos in tree.iterlinks():
             yield link
 except ImportError:
@@ -144,6 +149,8 @@ class Crawler(object):
             transaction.enter_transaction_management()
             try:
                 resp, returned_urls = self.get_url(from_url, to_url)
+            except HTMLParseError, e:
+                LOG.error("%s: unable to parse invalid HTML: %s", to_url, e)
             except Exception, e:
                 LOG.exception("%s had unhandled exception: %s", to_url, e)
                 continue
