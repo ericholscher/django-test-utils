@@ -104,24 +104,26 @@ class Crawler(object):
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
 
-        resp = self.c.get(url_path, request_dict, follow=True)
+        resp = self.c.get(url_path, request_dict, follow=False)
 
         test_signals.post_request.send(self, url=to_url, response=resp)
 
-        # We'll avoid logging a warning for HTTP statuses which aren't in the
-        # official error ranges:
-        if 400 <= resp.status_code < 600:
+        if resp.status_code in (301, 302):
+            location = resp["Location"]
+            if location.startswith("http://testserver"):
+                LOG.debug("%s: following redirect to %s", to_url, location)
+                # Mmm, recursion TODO: add a max redirects limit?
+                return self.get_url(from_url, location)
+            else:
+                LOG.info("%s: not following off-site redirect to %s", to_url, location)
+                return (resp, ())
+        elif 400 <= resp.status_code < 600:
+            # We'll avoid logging a warning for HTTP statuses which aren't in the
+            # official error ranges:
             LOG.warning("%s links to %s, which returned HTTP status %d", from_url, url_path, resp.status_code)
 
-        if resp.redirect_chain:
-            base_url = resp.redirect_chain[-1][0]
-            LOG.debug("%s: followed redirect: %s", to_url, " -> ".join([i for i, j in resp.redirect_chain]))
-        else:
-            base_url = to_url
-
-
         if resp['Content-Type'].startswith("text/html"):
-            returned_urls = self._parse_urls(base_url, resp)
+            returned_urls = self._parse_urls(to_url, resp)
             test_signals.urls_parsed.send(self, fro=to_url, returned_urls=returned_urls)
         else:
             returned_urls = list()
