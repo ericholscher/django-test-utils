@@ -56,6 +56,8 @@ from django.core.urlresolvers import reverse
 from django.http import HttpRequest
 from django.utils.datastructures import SortedDict
 from django.contrib import auth
+from django.core import signals
+from django.db import close_connection
 
 
 # make available through this module
@@ -110,6 +112,10 @@ def setup(host=None, port=None, allow_xhtml=True, propagate=True):
         else:
             old_propgate_setting = None
 
+        # Django closes the database connection after every request;
+        # this breaks the use of transactions in your tests.
+        signals.request_finished.disconnect(close_connection)
+
         INSTALLED[key] = (app, old_propgate_setting)
         return browser
     return False
@@ -144,6 +150,8 @@ def teardown(host=None, port=None):
             settings.DEBUG_PROPAGATE_EXCEPTIONS = old_propagate
     else:
         result = False
+
+    signals.request_finished.connect(close_connection)
 
     # note that our return value is just a guess according to our
     # own records, we pass the request on to twill in any case
