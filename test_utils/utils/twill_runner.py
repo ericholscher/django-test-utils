@@ -71,6 +71,28 @@ DEFAULT_PORT = 9090
 INSTALLED = SortedDict()   # keep track of the installed hooks
 
 
+class DjangoWsgiFix(object):
+    """Django closes the database connection after every request;
+    this breaks the use of transactions in your tests. This wraps
+    around Django's WSGI interface and will disable the critical
+    signal handler for every request served.
+
+    Note that we really do need to do this individually a every
+    request, not just once when our WSGI hook is installed, since
+    Django's own test client does the same thing; it would reinstall
+    the signal handler if used in combination with us.
+    """
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        signals.request_finished.disconnect(close_connection)
+        try:
+            return self.app(environ, start_response)
+        finally:
+            signals.request_finished.connect(close_connection)
+
+
 def setup(host=None, port=None, allow_xhtml=True, propagate=True):
     """Install the WSGI hook for ``host`` and ``port``.
 
@@ -95,7 +117,7 @@ def setup(host=None, port=None, allow_xhtml=True, propagate=True):
 
     if not key in INSTALLED:
         # installer wsgi handler
-        app = AdminMediaHandler(WSGIHandler())
+        app = DjangoWsgiFix(AdminMediaHandler(WSGIHandler()))
         twill.add_wsgi_intercept(host, port, lambda: app)
 
         # start browser fresh
@@ -111,10 +133,6 @@ def setup(host=None, port=None, allow_xhtml=True, propagate=True):
             settings.DEBUG_PROPAGATE_EXCEPTIONS = True
         else:
             old_propgate_setting = None
-
-        # Django closes the database connection after every request;
-        # this breaks the use of transactions in your tests.
-        signals.request_finished.disconnect(close_connection)
 
         INSTALLED[key] = (app, old_propgate_setting)
         return browser
@@ -150,8 +168,6 @@ def teardown(host=None, port=None):
             settings.DEBUG_PROPAGATE_EXCEPTIONS = old_propagate
     else:
         result = False
-
-    signals.request_finished.connect(close_connection)
 
     # note that our return value is just a guess according to our
     # own records, we pass the request on to twill in any case
