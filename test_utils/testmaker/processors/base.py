@@ -102,7 +102,7 @@ class Processer(object):
         keys = []
         for d in context.dicts:
             if isinstance(d, Context):
-                return self._get_context_keys(d)
+                keys += self._get_context_keys(d)
             keys += d.keys()
         return keys
 
