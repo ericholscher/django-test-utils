@@ -71,7 +71,7 @@ class Crawler(object):
 
         returned_urls = []
 
-        for a in link_extractor(html:
+        for a in link_extractor(html):
             parsed_href = urlparse.urlparse(a)
 
             if not parsed_href.path:

@@ -86,7 +86,7 @@ class Testmaker(object):
     def setup_logging(self, test_file=None, serialize_file=None):
         #supress other logging
         logging.basicConfig(level=logging.CRITICAL,
-                            filename="/dev/null")
+                            filename=path.devnull)
 
         #Override default if its passed in
         if not test_file:
