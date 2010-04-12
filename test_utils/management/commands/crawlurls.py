@@ -60,7 +60,7 @@ class Command(BaseCommand):
 
         console = logging.StreamHandler()
         console.setLevel(log_level)
-        console.setFormatter(logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s'))
+        console.setFormatter(logging.Formatter("%(name)s [%(levelname)s] %(module)s: %(message)s"))
 
         crawl_logger.addHandler(console)
 
