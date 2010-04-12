@@ -27,6 +27,10 @@ class Command(BaseCommand):
             help='Pass -t to time your requests.'),
         make_option('-r', '--response', action='store_true', dest='response', default=False,
             help='Pass -r to store the response objects.'),
+
+        make_option('--enable-plugin', action='append', dest='plugins', default=[],
+            help='Enable the specified plugin'),
+
         #TODO
         make_option('-e', '--each', action='store', dest='each',
             type='int',
@@ -72,6 +76,7 @@ class Command(BaseCommand):
 
         conf_urls = {}
 
+        # Build the list URLs to test from urlpatterns:
         for settings_mod in settings_modules:
             try:
                 urlconf = __import__(settings_mod.ROOT_URLCONF, {}, {}, [''])
@@ -85,7 +90,24 @@ class Command(BaseCommand):
                 func_name = hasattr(func, '__name__') and func.__name__ or repr(func)
                 conf_urls[regex] = ['func.__module__', func_name]
 
-            #Now we have all of our URLs to test
+        # Load plugins:
+        for p in options['plugins']:
+            # This nested try is somewhat unsightly but allows easy Pythonic
+            # usage ("--enable-plugin=tidy") instead of Java-esque
+            # "--enable-plugin=test_utils.crawler.plugins.tidy"
+            try:
+                try:
+                    plugin_module = __import__(p)
+                except ImportError:
+                    if not "." in p:
+                        plugin_module = __import__("test_utils.crawler.plugins.%s" % p)
+                    else:
+                        raise
+
+                plugin_module.active = True
+            except ImportError, e:
+                crawl_logger.critical("Unable to load plugin %s: %s", p, e)
+                sys.exit(3)
 
         c = Crawler(start_url, conf_urls=conf_urls, verbosity=verbosity)
         c.run()
