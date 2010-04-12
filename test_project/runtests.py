@@ -10,10 +10,8 @@ from django.test.utils import get_runner
 from django.conf import settings
 
 def runtests():
-    verbosity = 1
-    interactive = True
     test_runner = get_runner(settings)
-    failures = test_runner([], verbosity=verbosity, interactive=interactive)
+    failures = test_runner().run_tests([])
     sys.exit(failures)
 
 if __name__ == '__main__':
