@@ -126,6 +126,7 @@ class Crawler(object):
             # We'll avoid logging a warning for HTTP statuses which aren't in the
             # official error ranges:
             LOG.warning("%s links to %s, which returned HTTP status %d", from_url, url_path, resp.status_code)
+            return (resp, ())
 
         if resp['Content-Type'].startswith("text/html"):
             returned_urls = self._parse_urls(to_url, resp)
