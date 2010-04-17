@@ -49,7 +49,7 @@ class Crawler(object):
         self.verbosity = verbosity
 
         #These two are what keep track of what to crawl and what has been.
-        self.not_crawled = [('START',self.base_url)]
+        self.not_crawled = [(0, 'START',self.base_url)]
         self.crawled = {}
 
         self.c = Client(REMOTE_ADDR='127.0.0.1')
@@ -126,7 +126,7 @@ class Crawler(object):
 
         return (resp, returned_urls)
 
-    def run(self):
+    def run(self, max_depth=3):
 
         old_DEBUG = settings.DEBUG
         settings.DEBUG = False
@@ -136,7 +136,9 @@ class Crawler(object):
 
         while self.not_crawled:
             #Take top off not_crawled and evaluate it
-            from_url, to_url = self.not_crawled.pop(0)
+            current_depth, from_url, to_url = self.not_crawled.pop(0)
+            if current_depth > max_depth:
+                continue
 
             transaction.enter_transaction_management()
             try:
@@ -150,8 +152,8 @@ class Crawler(object):
             self.crawled[to_url] = True
             #Find its links that haven't been crawled
             for base_url in returned_urls:
-                if base_url not in [to for fro,to in self.not_crawled] and not self.crawled.has_key(base_url):
-                    self.not_crawled.append((to_url, base_url))
+                if base_url not in [to for dep,fro,to in self.not_crawled] and not self.crawled.has_key(base_url):
+                    self.not_crawled.append((current_depth+1, to_url, base_url))
 
         test_signals.finish_run.send(self)
 
