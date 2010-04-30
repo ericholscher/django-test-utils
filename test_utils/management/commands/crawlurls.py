@@ -25,14 +25,10 @@ class Command(BaseCommand):
             help='Pass -s to check for html fragments in your pages.'),
         make_option('-r', '--response', action='store_true', dest='response', default=False,
             help='Pass -r to store the response objects.'),
-
+        make_option('-t', '--time', action='store_true', dest='time', default=False,
+            help='Pass -t to time your requests.'),
         make_option('--enable-plugin', action='append', dest='plugins', default=[],
             help='Enable the specified plugin'),
-
-        #TODO
-        make_option('-e', '--each', action='store', dest='each',
-            type='int',
-            help='TODO: Pass -e NUM to specify how many times each URLConf entry should be hit.'),
     )
 
     help = "Displays all of the url matching routes for the project."
