@@ -48,40 +48,40 @@ def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
 
     suite = reorder_suite(suite, (TestCase,))
 
-    old_name = settings.DATABASE_NAME
+    old_name = settings.DATABASES['default']['NAME']
 
     ###Everything up to here is from django.test.simple
 
     from django.db.backends import creation
     from django.db import connection, DatabaseError
 
-    if settings.TEST_DATABASE_NAME:
-        settings.DATABASE_NAME = settings.TEST_DATABASE_NAME
+    if settings.DATABASES['default']['TEST_NAME']:
+        settings.DATABASES['default']['NAME'] = settings.DATABASES['default']['TEST_NAME']
     else:
-        settings.DATABASE_NAME = creation.TEST_DATABASE_PREFIX + settings.DATABASE_NAME
-    connection.settings_dict["DATABASE_NAME"] = settings.DATABASE_NAME
+        settings.DATABASES['default']['NAME'] = creation.TEST_DATABASE_PREFIX + settings.DATABASES['default']['NAME']
+    connection.settings_dict["DATABASE_NAME"] = settings.DATABASES['default']['NAME']
 
     # does test db exist already ?
     try:
-        if settings.DATABASE_ENGINE == 'sqlite3':
-            if not os.path.exists(settings.DATABASE_NAME):
+        if settings.DATABASES['default']['ENGINE'] == 'sqlite3':
+            if not os.path.exists(settings.DATABASES['default']['NAME']):
                 raise DatabaseError
         cursor = connection.cursor()
     except DatabaseError, e:
         # db does not exist
         # juggling !  create_test_db switches the DATABASE_NAME to the TEST_DATABASE_NAME
-        settings.DATABASE_NAME = old_name
+        settings.DATABASES['default']['NAME'] = old_name
         connection.settings_dict["DATABASE_NAME"] = old_name
         connection.creation.create_test_db(verbosity, autoclobber=True)
     else:
         connection.close()
 
-    settings.DATABASE_SUPPORTS_TRANSACTIONS = connection.creation._rollback_works()
+    settings.DATABASES['default']['SUPPORTS_TRANSACTIONS'] = connection.creation._rollback_works()
 
     result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
 
     #Since we don't call destory_test_db, we need to set the db name back.
-    settings.DATABASE_NAME = old_name
+    settings.DATABASES['default']['NAME'] = old_name
     connection.settings_dict["DATABASE_NAME"] = old_name
     teardown_test_environment()
 
