@@ -1,5 +1,5 @@
 Welcome to django-test-utils. The Documentation for this project is located at  http://ericholscher.com/projects/django-test-utils/
 
-It is currently undergoing a major refactoring to make it awesomer. Please submit bugs to Eric Holscher at eric@ericholscher.com.
+The tests are run on every commit on Devmason: http://devmason.com/pony_server/django-test-utils
 
 Thanks for using test utils!

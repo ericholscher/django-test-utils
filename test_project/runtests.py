@@ -11,7 +11,7 @@ from django.conf import settings
 
 def runtests():
     test_runner = get_runner(settings)
-    failures = test_runner().run_tests([])
+    failures = test_runner([])
     sys.exit(failures)
 
 if __name__ == '__main__':
