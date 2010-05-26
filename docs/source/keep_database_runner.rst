@@ -4,6 +4,11 @@ Persistent Database Test Runner
 
 This code allows you to persist a database between test runs. It is really useful for running the same tests again and again, without incurring the cost of having to re-create the database each time.
 
+.. note::
+
+    Currently support for 1.2 is in a 1.2 compatible branch. This will be
+    merged into trunk soon.
+
 
 Management Command
 ------------------
