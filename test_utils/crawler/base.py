@@ -1,4 +1,3 @@
-import cgi
 import urlparse
 import logging
 from HTMLParser import HTMLParseError
@@ -100,7 +99,7 @@ class Crawler(object):
         This uses the Django test client.
         """
         parsed = urlparse.urlparse(to_url)
-        request_dict = dict(cgi.parse_qsl(parsed.query))
+        request_dict = dict(urlparse.parse_qsl(parsed.query))
         url_path = parsed.path
 
         #url_path now contains the path, request_dict contains get params
