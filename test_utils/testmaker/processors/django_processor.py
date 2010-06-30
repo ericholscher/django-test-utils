@@ -8,7 +8,7 @@ STATUS_TEMPLATE  = \
 """        self.assertEqual(r.status_code, {{status_code}})"""
 
 CONTEXT_TEMPLATE = \
-"""        self.assertEqual(unicode(r.context["{{key}}"]), u"{{value}}")"""
+'''        self.assertEqual(unicode(r.context["{{key}}"]), u"""{{value}}""")'''
 
 class Processor(base.Processer):
     """Processes the serialized data. Generally to create some sort of test cases"""

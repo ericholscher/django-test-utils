@@ -6,7 +6,8 @@ from test_utils.management.commands.relational_dumpdata import _relational_dumpd
 from django.template import Context, Template
 from django.conf import settings
 
-TESTMAKER_TEMPLATE = """
+TESTMAKER_TEMPLATE = """\
+#coding: utf-8
 from django.test import TestCase
 from django.test import Client
 from django import template
