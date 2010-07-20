@@ -102,14 +102,14 @@ class Processer(object):
         keys = []
         for d in context.dicts:
             if isinstance(d, Context):
-                return self._get_context_keys(d)
+                keys += self._get_context_keys(d)
             keys += d.keys()
         return keys
 
     def _log_context(self, context):
         template = Template(self._get_template('context'))
+        keys = []
         if isinstance(context, list):
-            keys = []
             for c in context:
                 keys += self._get_context_keys(c)
         else:
