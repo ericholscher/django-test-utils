@@ -108,8 +108,8 @@ class Processer(object):
 
     def _log_context(self, context):
         template = Template(self._get_template('context'))
+        keys = []
         if isinstance(context, list):
-            keys = []
             for c in context:
                 keys += self._get_context_keys(c)
         else:
