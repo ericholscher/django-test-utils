@@ -1,4 +1,4 @@
-Welcome to django-test-utils. The Documentation for this project is located at  http://ericholscher.com/projects/django-test-utils/
+Welcome to django-test-utils. The Documentation for this project is located at http://readthedocs.org/projects/eric/django-test-utils/docs/index.html
 
 The tests are run on every commit on Devmason: http://devmason.com/pony_server/django-test-utils
 
