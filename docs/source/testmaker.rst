@@ -12,7 +12,7 @@ test-utils/>`__. The 0.2 release is available at `Pypi
 <http://pypi.python.org/pypi/django-test-utils/0.2>`__
 
 
-What is does
+What it does
 ============
 
 Django testmaker is an application that writes tests for your Django
