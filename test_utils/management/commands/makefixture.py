@@ -81,24 +81,24 @@ class Command(LabelCommand):
                                    related_set_name, model_name))
             to_reverse.setdefault(model, []).append(related_set_name)
         return to_reverse
-    
+
     def handle_models(self, models, **options):
         format = options.get('format','json')
         indent = options.get('indent',None)
         show_traceback = options.get('traceback', False)
         propagate = options.get('propagate', True)
         follow_reverse = self.handle_reverse(**options)
-        
+
         # Check that the serialization format exists; this is a shortcut to
         # avoid collating all the objects and _then_ failing.
         if format not in serializers.get_public_serializer_formats():
             raise CommandError("Unknown serialization format: %s" % format)
-        
+
         try:
             serializers.get_serializer(format)
         except KeyError:
             raise CommandError("Unknown serialization format: %s" % format)
-        
+
         objects = []
         for model, slice in models:
             if isinstance(slice, basestring):
@@ -113,7 +113,7 @@ class Command(LabelCommand):
                 objects.extend(items)
             else:
                 raise CommandError("Wrong slice: %s" % slice)
-        
+
         all = objects
         if propagate:
             collected = set([(x.__class__, x.pk) for x in all])
@@ -134,7 +134,7 @@ class Command(LabelCommand):
                                 if new and not (new.__class__, new.pk) in collected:
                                     collected.add((new.__class__, new.pk))
                                     related.append(new)
-                    # follow reverse relations as requested 
+                    # follow reverse relations as requested
                     for reverse_field in follow_reverse.get(x.__class__, []):
                         mgr = getattr(x, reverse_field)
                         for new in mgr.all():
@@ -143,7 +143,7 @@ class Command(LabelCommand):
                                 related.append(new)
                 objects = related
                 all.extend(objects)
-        
+
         try:
             return serializers.serialize(format, all, indent=indent)
         except Exception, e:
@@ -156,7 +156,7 @@ class Command(LabelCommand):
 
     def get_model_from_name(self, search):
         """Given a name of a model, return the model object associated with it
-        
+
         The name can be either fully specified or uniquely matching the
         end of the model name. e.g.
             django.contrib.auth.User

@@ -1,73 +1,73 @@
 [
     {
-        "pk": 1, 
-        "model": "polls.poll", 
+        "pk": 1,
+        "model": "polls.poll",
         "fields": {
-            "pub_date": "2007-04-01 00:00:00", 
-            "question": "What's up?", 
+            "pub_date": "2007-04-01 00:00:00",
+            "question": "What's up?",
             "slug": "whats-up"
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "polls.poll", 
+        "pk": 2,
+        "model": "polls.poll",
         "fields": {
-            "pub_date": "2009-04-25 21:46:44", 
-            "question": "Test poll", 
+            "pub_date": "2009-04-25 21:46:44",
+            "question": "Test poll",
             "slug": "test-poll"
         }
-    }, 
+    },
     {
-        "pk": 1, 
-        "model": "polls.choice", 
+        "pk": 1,
+        "model": "polls.choice",
         "fields": {
-            "votes": 3, 
-            "poll": 1, 
+            "votes": 3,
+            "poll": 1,
             "choice": "Just hacking again"
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "polls.choice", 
+        "pk": 2,
+        "model": "polls.choice",
         "fields": {
-            "votes": 2, 
-            "poll": 1, 
+            "votes": 2,
+            "poll": 1,
             "choice": "Playing with fire"
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "polls.choice", 
+        "pk": 3,
+        "model": "polls.choice",
         "fields": {
-            "votes": 0, 
-            "poll": 1, 
+            "votes": 0,
+            "poll": 1,
             "choice": "Clapping my shoes together three times"
         }
-    }, 
+    },
     {
-        "pk": 4, 
-        "model": "polls.choice", 
+        "pk": 4,
+        "model": "polls.choice",
         "fields": {
-            "votes": 0, 
-            "poll": 2, 
+            "votes": 0,
+            "poll": 2,
             "choice": "Choice 1 "
         }
-    }, 
+    },
     {
-        "pk": 5, 
-        "model": "polls.choice", 
+        "pk": 5,
+        "model": "polls.choice",
         "fields": {
-            "votes": 3, 
-            "poll": 2, 
+            "votes": 3,
+            "poll": 2,
             "choice": "Choice too"
         }
-    }, 
+    },
     {
-        "pk": 6, 
-        "model": "polls.choice", 
+        "pk": 6,
+        "model": "polls.choice",
         "fields": {
-            "votes": 0, 
-            "poll": 2, 
+            "votes": 0,
+            "poll": 2,
             "choice": "New Choice"
         }
     }

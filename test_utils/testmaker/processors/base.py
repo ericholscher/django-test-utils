@@ -116,7 +116,7 @@ class Processer(object):
             keys += self._get_context_keys(context)
         keys = set(keys)
 
-        # Skip some keys 
+        # Skip some keys
         for discardkey in DISCARD_CONTEXT_KEYS:
             keys.discard(discardkey)
 
