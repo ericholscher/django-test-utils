@@ -51,7 +51,7 @@ class Heap(Plugin):
         )
 
         for url, mem in alist[:10]:
-            LOG.info("%s: %f heap" % (url, filesizeformat(mem)))
+            LOG.info("%s: %s heap", url, filesizeformat(mem))
 
 
 PLUGIN = Heap
