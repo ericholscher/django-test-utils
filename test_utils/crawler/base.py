@@ -155,6 +155,10 @@ class Crawler(object):
         setup_test_environment()
         test_signals.start_run.send(self)
 
+        # To avoid tainting our memory usage stats with startup overhead we'll
+        # do one extra request for the first page now:
+        self.c.get(*self.not_crawled[0][-1])
+
         while self.not_crawled:
             #Take top off not_crawled and evaluate it
             current_depth, from_url, to_url = self.not_crawled.pop(0)
