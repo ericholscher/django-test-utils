@@ -49,10 +49,11 @@ class Crawler(object):
     This is a class that represents a URL crawler in python
     """
 
-    def __init__(self, base_url, conf_urls={}, verbosity=1, output_dir=None, **kwargs):
+    def __init__(self, base_url, conf_urls={}, verbosity=1, output_dir=None, ascend=True, **kwargs):
         self.base_url = base_url
         self.conf_urls = conf_urls
         self.verbosity = verbosity
+        self.ascend = ascend
 
         if output_dir:
             assert os.path.isdir(output_dir)
@@ -174,6 +175,10 @@ class Crawler(object):
             self.crawled[to_url] = True
             #Find its links that haven't been crawled
             for base_url in returned_urls:
+                if not self.ascend and not base_url.startswith(self.base_url):
+                    LOG.debug("Skipping %s - outside scope of %s", base_url, self.base_url)
+                    continue
+
                 if base_url not in [to for dep,fro,to in self.not_crawled] and not self.crawled.has_key(base_url):
                     self.not_crawled.append((current_depth+1, to_url, base_url))
 

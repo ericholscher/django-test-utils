@@ -31,6 +31,8 @@ class Command(BaseCommand):
             help='Enable the specified plugin'),
         make_option("-o", '--output-dir', action='store', dest='output_dir', default=None,
             help='If specified, store plugin output in the provided directory'),
+        make_option('--no-parent', action='store_true', dest="no_parent", default=False,
+            help='Do not crawl URLs which do not start with your base URL'),
     )
 
     help = "Displays all of the url matching routes for the project."
@@ -91,6 +93,7 @@ class Command(BaseCommand):
             conf_urls=conf_urls,
             verbosity=verbosity,
             output_dir=options.get("output_dir"),
+            ascend=not options.get("no_parent"),
         )
 
         # Load plugins:
