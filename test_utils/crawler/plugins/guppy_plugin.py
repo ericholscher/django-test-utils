@@ -11,12 +11,12 @@ except:
     LOG.debug('Guppy plugin not found. If you want memory profiling `pip install guppy`')
     ACTIVE = False
 
+
 class Heap(Plugin):
     """
     Calculate heap consumed before and after request
     """
-    #Takes too much time to be on by default.
-    #active = ACTIVE
+
     active = False
 
     def __init__(self, write_csv=False):
@@ -44,3 +44,6 @@ class Heap(Plugin):
         alist = sorted(self.heap_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, mem in alist[:10]:
             LOG.info("%s: %f heap" % (url, mem))
+
+
+PLUGIN = Heap

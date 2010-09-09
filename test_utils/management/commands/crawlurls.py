@@ -85,6 +85,8 @@ class Command(BaseCommand):
                 func_name = hasattr(func, '__name__') and func.__name__ or repr(func)
                 conf_urls[regex] = ['func.__module__', func_name]
 
+        c = Crawler(start_url, conf_urls=conf_urls, verbosity=verbosity)
+
         # Load plugins:
         for p in options['plugins']:
             # This nested try is somewhat unsightly but allows easy Pythonic
@@ -95,16 +97,18 @@ class Command(BaseCommand):
                     plugin_module = __import__(p)
                 except ImportError:
                     if not "." in p:
-                        plugin_module = __import__("test_utils.crawler.plugins.%s" % p)
+                        plugin_module = __import__(
+                            "test_utils.crawler.plugins.%s" % p,
+                            fromlist=["test_utils.crawler.plugins"]
+                        )
                     else:
                         raise
 
-                plugin_module.active = True
-            except ImportError, e:
+                c.plugins.append(plugin_module.PLUGIN())
+            except (ImportError, AttributeError), e:
                 crawl_logger.critical("Unable to load plugin %s: %s", p, e)
                 sys.exit(3)
 
-        c = Crawler(start_url, conf_urls=conf_urls, verbosity=verbosity)
         c.run(max_depth=depth)
 
         # We'll exit with a non-zero status if we had any errors

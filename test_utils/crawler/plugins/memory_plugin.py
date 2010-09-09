@@ -69,3 +69,5 @@ class Memory(Plugin):
         alist = sorted(self.memory_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, mem in alist[:10]:
             LOG.info("%s took %f of memory", url, mem)
+
+PLUGIN = Memory

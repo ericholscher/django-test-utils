@@ -71,3 +71,5 @@ class QueryCount(Plugin):
             else:
                 log_f = LOG.info
             log_f("%s: %s %d queries", url, k, v)
+
+PLUGIN = QueryCount

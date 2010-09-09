@@ -32,3 +32,5 @@ class URLConf(Plugin):
 
         if normal_patterns:
             LOG.info("These patterns were not matched during the crawl: %s", "\n\t".join(sorted(normal_patterns)))
+
+PLUGIN = URLConf

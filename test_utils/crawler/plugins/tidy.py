@@ -110,3 +110,6 @@ class Tidy(Plugin):
                 url,
                 "\n\t".join(warnings)
             )
+
+
+PLUGIN = Tidy

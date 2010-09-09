@@ -31,3 +31,5 @@ class Time(Plugin):
         alist = sorted(self.timed_urls.iteritems(), key=lambda (k,v): (v,k), reverse=True)
         for url, ttime in alist[:10]:
             LOG.info("%s took %f", url, ttime)
+
+PLUGIN = Time

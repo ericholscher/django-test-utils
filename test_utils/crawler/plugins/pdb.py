@@ -18,3 +18,5 @@ class Pdb(Plugin):
                     import ipdb; ipdb.set_trace()
                 except ImportError:
                     import pdb; pdb.set_trace()
+
+PLUGIN = Pdb

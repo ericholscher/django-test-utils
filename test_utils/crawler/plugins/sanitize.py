@@ -30,3 +30,5 @@ class Sanitize(Plugin):
             LOG.error('Saved bad html to file temp.html')
             raise e
 
+
+PLUGIN = Sanitize
