@@ -113,7 +113,7 @@ class Crawler(object):
 
         #url_path now contains the path, request_dict contains get params
 
-        LOG.info("%s: link to %s with parameters %s", from_url, to_url, request_dict)
+        LOG.debug("%s: link to %s with parameters %s", from_url, to_url, request_dict)
 
         test_signals.pre_request.send(self, url=to_url, request_dict=request_dict)
 
