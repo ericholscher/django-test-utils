@@ -2,6 +2,8 @@ import csv
 import logging
 import os
 
+from django.template.defaultfilters import filesizeformat
+
 from guppy import hpy
 
 from base import Plugin
@@ -35,7 +37,7 @@ class Heap(Plugin):
         heap = self.hp.heap()
         self.heap_urls[url] = heap.size
 
-        LOG.debug("%s: heap consumed: %s", url, self.heap_urls[url])
+        LOG.debug("%s: heap consumed: %s", url, filesizeformat(self.heap_urls[url]))
 
         if self.csv_writer:
             self.csv_writer.writerow([url, heap.size])
@@ -49,7 +51,7 @@ class Heap(Plugin):
         )
 
         for url, mem in alist[:10]:
-            LOG.info("%s: %f heap" % (url, mem))
+            LOG.info("%s: %f heap" % (url, filesizeformat(mem)))
 
 
 PLUGIN = Heap
