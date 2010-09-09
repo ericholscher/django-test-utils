@@ -29,6 +29,8 @@ class Command(BaseCommand):
             help='Pass -t to time your requests.'),
         make_option('--enable-plugin', action='append', dest='plugins', default=[],
             help='Enable the specified plugin'),
+        make_option("-o", '--output-dir', action='store', dest='output_dir', default=None,
+            help='If specified, store plugin output in the provided directory'),
     )
 
     help = "Displays all of the url matching routes for the project."
@@ -85,7 +87,11 @@ class Command(BaseCommand):
                 func_name = hasattr(func, '__name__') and func.__name__ or repr(func)
                 conf_urls[regex] = ['func.__module__', func_name]
 
-        c = Crawler(start_url, conf_urls=conf_urls, verbosity=verbosity)
+        c = Crawler(start_url,
+            conf_urls=conf_urls,
+            verbosity=verbosity,
+            output_dir=options.get("output_dir"),
+        )
 
         # Load plugins:
         for p in options['plugins']:

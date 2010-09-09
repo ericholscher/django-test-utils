@@ -25,6 +25,10 @@ class Plugin(object):
 
         self.data = self.global_data[self.__class__.__name__] = {}
 
+        # This will be updated when a run starts if the user wants output to
+        # be saved:
+        self.output_dir = None
+
     """
     #These functions enable instance['test'] to save to instance.data
     def __setitem__(self, key, val):
@@ -33,3 +37,10 @@ class Plugin(object):
     def __getitem__(self, key):
         return self.global_data[self.__class__.__name__][key]
     """
+
+    def set_output_dir(self, output_dir):
+        """
+        Extension point for subclasses to open files, create directories, etc.
+        """
+
+        self.output_dir = output_dir

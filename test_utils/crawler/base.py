@@ -1,6 +1,7 @@
-import urlparse
-import logging
 from HTMLParser import HTMLParseError
+import logging
+import os
+import urlparse
 
 from django.conf import settings
 from django.db import transaction
@@ -47,10 +48,18 @@ class Crawler(object):
     """
     This is a class that represents a URL crawler in python
     """
-    def __init__(self, base_url, conf_urls={}, verbosity=1, **kwargs):
+
+    def __init__(self, base_url, conf_urls={}, verbosity=1, output_dir=None, **kwargs):
         self.base_url = base_url
         self.conf_urls = conf_urls
         self.verbosity = verbosity
+
+        if output_dir:
+            assert os.path.isdir(output_dir)
+            self.output_dir = os.path.realpath(output_dir)
+            LOG.info("Output will be saved to %s" % self.output_dir)
+        else:
+            self.output_dir = None
 
         #These two are what keep track of what to crawl and what has been.
         self.not_crawled = [(0, 'START',self.base_url)]
@@ -136,6 +145,8 @@ class Crawler(object):
         return (resp, returned_urls)
 
     def run(self, max_depth=3):
+        for p in self.plugins:
+            p.set_output_dir(self.output_dir)
 
         old_DEBUG = settings.DEBUG
         settings.DEBUG = False
