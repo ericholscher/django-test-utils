@@ -1,11 +1,15 @@
+import csv
 import logging
+import os
 
 from django.conf import settings
 from django.db import connections
 
 from base import Plugin
 
+
 LOG = logging.getLogger('crawler')
+
 
 class QueryCount(Plugin):
     """
@@ -14,6 +18,9 @@ class QueryCount(Plugin):
 
     def __init__(self):
         super(QueryCount, self).__init__()
+
+        self.csv_writer = None
+
         self.query_counts = self.data['query_counts'] = {}
 
         # Horrible monkey-patch to log query counts when DEBUG = False:
@@ -46,6 +53,12 @@ class QueryCount(Plugin):
 
             conn.cursor = new_cursor
 
+    def set_output_dir(self, output_dir=None):
+        super(QueryCount, self).set_output_dir(output_dir)
+
+        if output_dir:
+            self.csv_writer = csv.writer(open(os.path.join(output_dir, 'query_counts.csv'), 'w'))
+
     def pre_request(self, sender, **kwargs):
         url = kwargs['url']
         self.query_counts[url] = dict((c.alias, c.dtu_query_count) for c in connections.all())
@@ -58,8 +71,9 @@ class QueryCount(Plugin):
         deltas = {}
         for k, v in new_query_counts:
             # Skip inactive connections:
-            if v > 0:
-                deltas[k] = v - self.query_counts[url][k]
+            delta = v - self.query_counts[url][k]
+            if delta > 0:
+                deltas[k] = delta
 
         for k, v in sorted(deltas.items(), reverse=True):
             if v > 50:
@@ -71,5 +85,9 @@ class QueryCount(Plugin):
             else:
                 log_f = LOG.info
             log_f("%s: %s %d queries", url, k, v)
+
+        if self.csv_writer:
+            self.csv_writer.writerow((url, sum(deltas.values())))
+
 
 PLUGIN = QueryCount
