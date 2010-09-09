@@ -2,22 +2,15 @@ from base import Plugin
 import csv
 import logging
 
-LOG = logging.getLogger("crawler")
+from guppy import hpy
 
-try:
-    from guppy import hpy
-    ACTIVE = True
-except:
-    LOG.debug('Guppy plugin not found. If you want memory profiling `pip install guppy`')
-    ACTIVE = False
+LOG = logging.getLogger("crawler")
 
 
 class Heap(Plugin):
     """
     Calculate heap consumed before and after request
     """
-
-    active = False
 
     def __init__(self, write_csv=False):
         super(Heap, self).__init__()
