@@ -33,6 +33,8 @@ class Command(BaseCommand):
             help='If specified, store plugin output in the provided directory'),
         make_option('--no-parent', action='store_true', dest="no_parent", default=False,
             help='Do not crawl URLs which do not start with your base URL'),
+        make_option('-a', "--auth", action='store', dest='auth', default=None,
+            help='Authenticate (login:user,password:secret) before crawl')
     )
 
     help = "Displays all of the url matching routes for the project."
@@ -41,6 +43,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         verbosity = int(options.get('verbosity', 1))
         depth = int(options.get('depth', 3))
+
+        auth = _parse_auth(options.get('auth'))
 
         if verbosity > 1:
             log_level = logging.DEBUG
@@ -94,6 +98,7 @@ class Command(BaseCommand):
             verbosity=verbosity,
             output_dir=options.get("output_dir"),
             ascend=not options.get("no_parent"),
+            auth=auth,
         )
 
         # Load plugins:
@@ -128,3 +133,19 @@ class Command(BaseCommand):
             sys.exit(1)
         else:
             sys.exit(0)
+
+
+def _parse_auth(auth):
+    """
+    Parse auth string and return dict.
+
+    >>> _parse_auth('login:user,password:secret')
+    {'login': 'user', 'password': 'secret'}
+
+    >>> _parse_auth('name:user, token:top:secret')
+    {'name': 'user', 'token': 'top:secret'}
+    """
+    if not auth:
+        return None
+    items = auth.split(',')
+    return dict(i.strip().split(':', 1) for i in items)
