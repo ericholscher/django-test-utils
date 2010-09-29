@@ -5,6 +5,7 @@ import urlparse
 
 from django.conf import settings
 from django.db import transaction
+from django.views.debug import cleanse_setting
 from django.test.client import Client
 from django.test.utils import setup_test_environment, teardown_test_environment
 
@@ -55,6 +56,8 @@ class Crawler(object):
         self.verbosity = verbosity
         self.ascend = ascend
 
+        auth = kwargs.get('auth')
+
         if output_dir:
             assert os.path.isdir(output_dir)
             self.output_dir = os.path.realpath(output_dir)
@@ -67,6 +70,13 @@ class Crawler(object):
         self.crawled = {}
 
         self.c = Client(REMOTE_ADDR='127.0.0.1')
+
+        if auth:
+            printable_auth = ', '.join(
+                '%s: %s' % (key, cleanse_setting(key.upper(), value))
+                for key, value in auth.items())
+            LOG.info('Log in with %s' % printable_auth)
+            self.c.login(**auth)
 
         self.plugins = []
         for plug in Plugin.__subclasses__():
