@@ -16,6 +16,8 @@ If you have any questions, please contact `Eric Holscher <http://ericholscher.co
 
 There is a `Bug Tracker <http://github.com/ericholscher/django-test-utils/issues>`_ at Github as well, if you find any defects with the code. Pull requests and patches are better than filing a bug.
 
+The mailing list for the project is located on Google Groups: http://groups.google.com/group/django-testing
+
 Contents
 --------
 
