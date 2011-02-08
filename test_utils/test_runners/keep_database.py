@@ -67,7 +67,7 @@ def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
             if not os.path.exists(settings.DATABASES['default']['NAME']):
                 raise DatabaseError
         cursor = connection.cursor()
-    except DatabaseError, e:
+    except Exception:
         # db does not exist
         # juggling !  create_test_db switches the DATABASE_NAME to the TEST_DATABASE_NAME
         settings.DATABASES['default']['NAME'] = old_name
