@@ -1,4 +1,13 @@
-from django.test.simple import *
+from django.test import TestCase
+from django.test.simple import build_test, reorder_suite, build_suite
+from django.test.utils import setup_test_environment, teardown_test_environment
+from django.test.testcases import connections_support_transactions
+from django.db.models import get_app, get_apps
+from django.conf import settings
+try:
+    from django.utils import unittest # django's 1.3 copy of unittest2
+except ImportError:
+    import unittest # system fallback
 import os
 
 def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
@@ -76,7 +85,7 @@ def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
     else:
         connection.close()
 
-    settings.DATABASES['default']['SUPPORTS_TRANSACTIONS'] = connection.creation._rollback_works()
+    settings.DATABASES['default']['SUPPORTS_TRANSACTIONS'] = connections_support_transactions()
 
     result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
 
