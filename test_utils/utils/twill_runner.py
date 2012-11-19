@@ -52,7 +52,7 @@ import twill.browser
 from django.conf import settings
 from django.core.servers.basehttp import AdminMediaHandler
 from django.core.handlers.wsgi import WSGIHandler
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, NoReverseMatch
 from django.http import HttpRequest
 from django.utils.datastructures import SortedDict
 from django.contrib import auth
@@ -202,8 +202,11 @@ class _EasyTwillBrowser(twill.browser.TwillBrowser):
     def go(self, url, args=None, kwargs=None, default=None):
         assert not ((args or kwargs) and default==False)
 
-        if args is not None or kwargs is not None:
+        try:
             url = reverse(url, args=args, kwargs=kwargs)
+        except NoReverseMatch:
+            pass
+        else:
             default = True    # default is implied
 
         if INSTALLED:
