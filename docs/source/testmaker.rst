@@ -125,7 +125,7 @@ currently json, yaml, or xml.
 --addrport
 ----------
 
-This allows you to pass in the normal address and post options for
+This allows you to pass in the normal address and port options for
 runserver.
 
 
