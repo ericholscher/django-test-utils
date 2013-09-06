@@ -1,8 +1,14 @@
 import re
 import os
 from django.conf import settings
-from django.template.loaders.filesystem import load_template_source
 from django import template
+
+try:
+    from django.template.loaders.filesystem import load_template_source
+except ImportError:
+    from django.template.loaders.filesystem import Loader
+    loader = Loader
+    load_template_source = lambda name: loader.load_template_source(name)
 
 from test_utils.testmaker import Testmaker
 
