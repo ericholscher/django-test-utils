@@ -104,6 +104,11 @@ class Crawler(object):
             if parsed_href.scheme and not parsed_href.netloc.startswith("testserver"):
                 LOG.debug("Skipping external link: %s", link)
                 continue
+                
+            if parsed_href.path.startswith(settings.STATIC_URL) or \
+                    parsed_href.path.startswith(settings.MEDIA_URL):
+                LOG.debug("Skipping static/media link: %s", link)
+                continue
 
             if parsed_href.path.startswith('/'):
                 returned_urls.append(link)
