@@ -72,7 +72,7 @@ class Command(BaseCommand):
         else:
             start_url = args[0] if args else '/'
 
-        if settings.ADMIN_FOR:
+        if getattr(settings, 'ADMIN_FOR', None):
             settings_modules = [__import__(m, {}, {}, ['']) for m in settings.ADMIN_FOR]
         else:
             settings_modules = [settings]
