@@ -88,7 +88,7 @@ class Command(BaseCommand):
                 continue
 
             view_functions = extract_views_from_urlpatterns(urlconf.urlpatterns)
-            for (func, regex) in view_functions:
+            for (func, regex, namespace, name) in view_functions:
                 #Get function name and add it to the hash of URLConf urls
                 func_name = hasattr(func, '__name__') and func.__name__ or repr(func)
                 conf_urls[regex] = ['func.__module__', func_name]
